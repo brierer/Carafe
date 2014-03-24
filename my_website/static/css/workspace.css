@@ -1,0 +1,22 @@
+
+#id_formulas{
+	border-radius: 0px 0px 0px 0px;
+	resize:vertical;
+}
+
+#editor{
+	visibility: hidden;
+}
+
+
+.chart{
+	height: 250px;
+	width: 250px;
+	border-style:solid;
+	border-width:1px;
+	border-color: #ccc;
+}
+
+.hidden{
+	visibility: hidden;
+}
