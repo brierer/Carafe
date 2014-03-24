@@ -17,7 +17,7 @@ def get_client_ip(request):
         ip = request.META.get('REMOTE_ADDR')
     return ip
 
-def getCalcResult(request):
+def get_calc_result(request):
 	form_id = request.GET.get('form_id', 'default')
 	key = get_client_ip(request) + form_id
 	if request.method == 'GET':  # S'il s'agit d'une requête POST
@@ -25,7 +25,7 @@ def getCalcResult(request):
 		return HttpResponse(json.dumps(resultat), content_type="application/json")
 
 
-def postCalcResult(request):
+def post_calc_result(request):
 	if request.method == 'POST':  # S'il s'agit d'une requête POST
 		form = FormulasForm(request.POST)  # Nous reprenons les données
 		if form.is_valid():
@@ -48,7 +48,7 @@ def postCalcResult(request):
 		response_data['message'] = 'You messed up'
 		return HttpResponse(json.dumps(response_data), content_type="application/json")	
 
-def createBook(request):
+def create_book(request):
 	print request.method
 	if request.method == 'POST':  # S'il s'agit d'une requête POST
 		form = CreateBookForm(request.POST)  # Nous reprenons les données
@@ -61,12 +61,12 @@ def createBook(request):
 	return redirect('/profil/account/')		
 
 
-def getBook(request, book_id):
+def get_book(request, book_id):
 	book = getBookById(book_id)
 	formulas =	book.formulas	
 	form = FormulasForm()  # Nous créons un formulaire vide
 	form.setKey(book_id)
 	return render(request, 'book/workspace.html', locals())  
 
-def evaluateFormulas(request, book_id): 
-	return getBook(request, book_id) 
+def evaluate_formulas(request, book_id): 
+	return get_book(request, book_id) 
