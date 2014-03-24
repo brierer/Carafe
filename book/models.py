@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 import datetime
 
 
-def getBookById(crypt_id):
+def get_book_by_Id(crypt_id):
 	return Book.objects.get(id=crypt_id)
 
 

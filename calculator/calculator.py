@@ -66,13 +66,13 @@ class Sender:
       
 
 def initCalc(key, formulas):
-    print "init"
     Receiver().clear(key)
     sender = Sender().sendMessage(key+";"+formulas)
     print " [x] Sent " + key
     return None 
 
 def getResult(key, id):
+    print " [x] Get  " + key
     result = Receiver().getLastMessageFrom(key)
     if (result == ""):
         return None

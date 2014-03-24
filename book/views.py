@@ -2,7 +2,7 @@
 from django.core.context_processors import csrf
 from django.shortcuts import render
 from book.forms import * 
-from book.models import Book, getBookById
+from book.models import Book, get_book_by_Id
 from calculator.calculator import *
 from django.shortcuts import redirect
 from django.http import HttpResponse
@@ -34,7 +34,6 @@ def post_calc_result(request):
 			book_id = form.cleaned_data['book_id']
 			formulas = filter(lambda a: ord(a) != 13 , formulas)
 			key = get_client_ip(request) + form_id
-			print "salut"
 			resultat = initCalc(key, formulas)
 			if (resultat is not None):
 				result = resultat[0]
@@ -63,7 +62,7 @@ def create_book(request):
 
 
 def get_book(request, book_id):
-	book = getBookById(book_id)
+	book = get_book_by_Id(book_id)
 	formulas =	book.formulas	
 	form = FormulasForm()  # Nous créons un formulaire vide
 	form.setKey(book_id)
