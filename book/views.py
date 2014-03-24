@@ -75,17 +75,4 @@ def getBook(request, book_id):
 	return render(request, 'book/workspace.html', locals())  
 
 def evaluateFormulas(request, book_id): 
-	"""if request.method == 'POST':  # S'il s'agit d'une requête POST
-		form = FormulasForm(request.POST)  # Nous reprenons les données
-
-		if form.is_valid():
-			formulas = form.cleaned_data['formulas']
-			resultat = initCalc(formulas)
-			result = resultat[0]
-			chart = resultat[1]
-			book = Book.objects.get(id=book_id)
-			book.formulas =	formulas
-			book.save()
-		return render(request, 'book/workspace.html', locals()) 	
-	else: """ # Si ce n'est pas du POST, c'est probablement une requête GET
 	return getBook(request, book_id) 
