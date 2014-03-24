@@ -29,10 +29,6 @@ def getCalcResult(request):
 
 
 def postCalcResult(request):
-	ip = get_client_ip(request)
-	crsf = unicode(csrf(request)['csrf_token'])
-	key = ip 
-
 	if request.method == 'POST':  # S'il s'agit d'une requête POST
 		form = FormulasForm(request.POST)  # Nous reprenons les données
 		if form.is_valid():
@@ -40,6 +36,7 @@ def postCalcResult(request):
 			form_id = form.cleaned_data['form_id']
 			book_id = form.cleaned_data['book_id']
 			formulas = filter(lambda a: ord(a) != 13 , formulas)
+			key = get_client_ip(request + form_id
 			resultat = initCalc(key + form_id, formulas)
 			if (resultat is not None):
 				result = resultat[0]
