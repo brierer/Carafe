@@ -18,11 +18,8 @@ def get_client_ip(request):
     return ip
 
 def getCalcResult(request):
-	ip = get_client_ip(request)
-	crsf = unicode(csrf(request)['csrf_token'])
 	form_id = request.GET.get('form_id', 'default')
-	print form_id
-	key = ip + form_id
+	key = get_client_ip(request) + form_id
 	if request.method == 'GET':  # S'il s'agit d'une requête POST
 		resultat = getResult(key ,1)	
 		return HttpResponse(json.dumps(resultat), content_type="application/json")
@@ -37,7 +34,7 @@ def postCalcResult(request):
 			book_id = form.cleaned_data['book_id']
 			formulas = filter(lambda a: ord(a) != 13 , formulas)
 			key = get_client_ip(request + form_id
-			resultat = initCalc(key + form_id, formulas)
+			resultat = initCalc(key, formulas)
 			if (resultat is not None):
 				result = resultat[0]
 				chart = resultat[1]
