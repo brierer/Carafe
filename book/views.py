@@ -33,7 +33,8 @@ def post_calc_result(request):
 			form_id = form.cleaned_data['form_id']
 			book_id = form.cleaned_data['book_id']
 			formulas = filter(lambda a: ord(a) != 13 , formulas)
-			key = get_client_ip(request + form_id
+			key = get_client_ip(request) + form_id
+			print "salut"
 			resultat = initCalc(key, formulas)
 			if (resultat is not None):
 				result = resultat[0]
