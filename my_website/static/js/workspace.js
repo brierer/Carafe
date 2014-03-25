@@ -12,6 +12,9 @@ $("#formulaToggle").click(
   }
 );
 
+
+
+
 var editor
 $(function() {
   editor = CodeMirror.fromTextArea(document.getElementById("id_formulas"), {
@@ -20,22 +23,23 @@ $(function() {
     theme: "elegant"
 
   });
-  $("#editor").css("visibility","visible");
+  $("#editor").css("visibility", "visible");
   eqEvaluation();
 })
 
 var startTime = new Date().getTime();
 
 
-  function eqEvaluation() {
-    startTime = new Date().getTime();
-    editor.save();
-    var formData = $("form").serialize();
-    isCalculatingWaiting = true;
-    $.post('postCalcResult', formData, function() {
-      initPollingGetCalcResult();
-    });
-  };
+function eqEvaluation() {
+  $('#invisible-wrapper').css("visibility","visible");
+  startTime = new Date().getTime();
+  editor.save();
+  var formData = $("form").serialize();
+  isCalculatingWaiting = true;
+  $.post('postCalcResult', formData, function() {
+    initPollingGetCalcResult();
+  });
+};
 
 
 function initPollingGetCalcResult() {
@@ -46,9 +50,9 @@ function initPollingGetCalcResult() {
 
 function pollingServerCalcGetResult(nbTry) {
   if (nbTry < 5) {
-  var id_form = $("#id_form_id").serialize();
-  var id_book = $("#id_book_id").serialize();
-    $.get('getCalcResult/?'+id_form, function(data, status) {
+    var id_form = $("#id_form_id").serialize();
+    var id_book = $("#id_book_id").serialize();
+    $.get('getCalcResult/?' + id_form, function(data, status) {
       var now = new Date().getTime();
       var timesRun = nbTry;
       console.log('Action ' + (timesRun + 1) + ' started ' + (now - startTime) + 'ms after script start');
@@ -79,6 +83,55 @@ $("#equationToggle").click(
   }
 );
 
+
+function setWidget() {
+  setDraggableWidget();
+  setIconTable();
+}
+
+
+
+
+function setIconTable() {
+  $("th").find("i").click(function(e) {
+
+    var $contextMenu = $("#contextMenu");
+
+  
+    $contextMenu.css({
+      display: "block",
+      left: e.pageX,
+      top: e.pageY
+    });
+
+
+    $contextMenu.on("click", "a", function () {
+      $contextMenu.hide();
+    });
+    var contextVisible=false;
+
+    $("#dashboard").click(function() {
+      if(contextVisible) {
+       $contextMenu.hide();
+       contextVisible = false;
+       $("#dashboard").unbind();
+     }
+      else{
+        contextVisible=true;
+      } 
+    });
+
+  });
+
+
+  $("th").mouseover(function() {
+    $(this).find("i").removeClass("hidden");
+  });
+  $("th").mouseout(function() {
+    $(this).find("i").addClass("hidden");
+  });
+
+}
 
 function setDraggableWidget() {
   $(".ui-widget-content").draggable({
@@ -122,31 +175,16 @@ function displayChart(chart) {
 
 
 
-$("#test").click(
-  function() {
-    $("#containment-wrapper").empty();
-    var formData = $("form").serialize();
-    $.post('test', formData, function(data, status) {
-      displayData(data);
-    });
-  }
-);
-
 function displayData(data) {
   var html = "";
   html += displayAllTable(data[0]);
   $("#containment-wrapper").html(html);
-  setDraggableWidget();
+  setWidget();
   displayChart(data[1]);
-  setWidgetEvent();
-
+  console.log("salut");
+  $('#invisible-wrapper').css("visibility","hidden");
 }
 
-function setWidgetEvent(){
-  $("th").dblclick(function () {
-    alert("salut");
-  })
-}
 
 function displayAllTable(tables) {
   var html = "";
@@ -185,7 +223,7 @@ function displayOneColVal(col) {
 
 
 function displayOneCol(col) {
-  var html = '<th style="width: 20px;">Col</th>'
+  var html = '<th style="width: 20px;">Col<i class="hidden fa fa-sort-asc pull-right" ></th>'
   return html
 };
 
