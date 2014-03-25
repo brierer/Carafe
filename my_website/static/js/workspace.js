@@ -23,6 +23,7 @@ $(function() {
     theme: "elegant"
 
   });
+
   $("#editor").css("visibility", "visible");
   eqEvaluation();
 })
@@ -176,43 +177,63 @@ function displayChart(chart) {
 
 
 function displayData(data) {
-  var html = "";
-  html += displayAllTable(data[0]);
+  var html= "";
+  $(data).each(function (d){
+    if( this instanceof Array ) {
+    html +=  displayOneTable(this);
+    }else{
+      //
+    }
+  })
+  
   $("#containment-wrapper").html(html);
   setWidget();
-  displayChart(data[1]);
-  console.log("salut");
+  //displayChart(data[1]);
   $('#invisible-wrapper').css("visibility","hidden");
 }
-
 
 function displayAllTable(tables) {
   var html = "";
   $.each(tables, function(i, table) {
     html += displayOneTable(table);
   });
-  return html;
+  $("#containment-wrapper").append(html); 
 };
 
 function displayOneTable(table) {
   var html = '<table class="ui-widget-content draggable table table-bordered table-hover table-striped" style="width: 179px;"><thead style="width: 179px;"><tr>'
 
-  $.each(table[0], function(i, col) {
+  $.each(table, function(i, col) {
     html += displayOneCol(col);
   });
 
   html += '</tr></thead><tbody>'
+  
+  nbRows = 0;
 
   $.each(table, function(i, col) {
-    html += displayOneColVal(col);
+    nbRows =  (col.length>nbRows) ? col.length : nbRows ;
   });
 
+
+  for(r=0;r<nbRows;r++){
+      html += '<tr style="width: 20px;">'
+      $.each(table, function(i, col) {
+        if (col[r] != undefined)
+        html += '<td style="width: 20px;">' + col[r] + '</td>';
+        else
+        html += '<td style="width: 20px;">' + '' + '</td>';
+     });
+      html += '</tr>';
+  }
+
   html += '</tbody></table>'
+  console.log(html);
   return html;
 
 };
 
-function displayOneColVal(col) {
+function displayCells(col) {
   var html = '<tr style="width: 20px;">'
   $.each(col, function(i, value) {
     html += '<td style="width: 20px;">' + value + '</td>';

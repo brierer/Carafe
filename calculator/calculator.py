@@ -76,16 +76,7 @@ def getResult(key, id):
     result = Receiver().getLastMessageFrom(key)
     if (result == ""):
         return None
-    convertJSON = json.loads(result)   
-    transposeJSON = map(transpose,table(convertJSON))
-    return (transposeJSON,chart(convertJSON))
+    convertJSON = json.loads(result) 
+    print convertJSON  
+    return convertJSON
 
-
-def transpose(array):
-	return map(list,zip(*array))
-
-def chart(array):
-	return filter(lambda x: 'type' in x,array)
-def table(array):
-	return filter(lambda x:  'type' not in x  ,array 
-		)
