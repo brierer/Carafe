@@ -17,20 +17,65 @@
 	visibility: hidden;
 	z-index: 100;
 }
+
+    ::-moz-selection{
+    background-color:Transparent;
+    color:#000;
+    }
+
+    ::selection {
+    background-color:Transparent;
+    color:#000;
+    }
+
+#containment-wrapper::-moz-selection,
+#containment-wrapper::selection {  }
+
 #containment-wrapper{
 	z-index: 10;
+}
+
+#chart {
+	position: relative;
+	left: 40px;
+	display: block;
+}
+#y_axis {
+	position: absolute;
+	top: 20px;
+	bottom: 0;
+	width: 40px;
+}
+#x_axis {
+	position: relative;
+	left: 40px;
+	height: 30px;
 }
 
 #dashboard{
 	position: relative;
 }
 
-.chart{
-	height: 250px;
-	width: 250px;
+
+
+.chart-title{
+	display: inline-block;
+	width: 100%;
+	text-align:center;
+}
+
+.chart-container{
+	display: inline-block;
+	overflow: hidden; 
+	position:relative;
+	padding: 0px 0px 0px 0px;
 	border-style:solid;
 	border-width:1px;
 	border-color: #ccc;
+}
+
+.chart{
+
 }
 
 #contextMenu {

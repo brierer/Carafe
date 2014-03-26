@@ -14,7 +14,6 @@ $("#formulaToggle").click(
 
 
 
-
 var editor
 $(function() {
   editor = CodeMirror.fromTextArea(document.getElementById("id_formulas"), {
@@ -32,7 +31,7 @@ var startTime = new Date().getTime();
 
 
 function eqEvaluation() {
-  $('#invisible-wrapper').css("visibility","visible");
+  $('#invisible-wrapper').css("visibility", "visible");
   startTime = new Date().getTime();
   editor.save();
   var formData = $("form").serialize();
@@ -92,13 +91,12 @@ function setWidget() {
 
 
 
-
 function setIconTable() {
   $("th").find("i").click(function(e) {
 
     var $contextMenu = $("#contextMenu");
 
-  
+
     $contextMenu.css({
       display: "block",
       left: e.pageX,
@@ -106,20 +104,19 @@ function setIconTable() {
     });
 
 
-    $contextMenu.on("click", "a", function () {
+    $contextMenu.on("click", "a", function() {
       $contextMenu.hide();
     });
-    var contextVisible=false;
+    var contextVisible = false;
 
     $("#dashboard").click(function() {
-      if(contextVisible) {
-       $contextMenu.hide();
-       contextVisible = false;
-       $("#dashboard").unbind();
-     }
-      else{
-        contextVisible=true;
-      } 
+      if (contextVisible) {
+        $contextMenu.hide();
+        contextVisible = false;
+        $("#dashboard").unbind();
+      } else {
+        contextVisible = true;
+      }
     });
 
   });
@@ -143,53 +140,83 @@ function setDraggableWidget() {
 
 
 function displayChart(chart) {
-  chart.forEach(function(entry) {
-    $("#containment-wrapper").append("<div id='chart1' class='chart'></div>")
+
+   $("#containment-wrapper").append("<span class='chart-container ui-widget-content draggable clearfix' ><div class='chart-title'></div><div id='y_axis'></div><div id='chart' class='chart'></div><div id='x_axis'></div></span>")
     var chartData = []
-    var i = 0;
+    
 
-    entry['data'].forEach(function(d) {
-
-      i++;
+    $(chart.y).each(function(i) {
       chartData.push({
-        year: "" + (2008 + i),
-        value: d
+        x: chart.x[i],
+        y: chart.y[i]
       });
     });
 
+var format = function(n) {
+  return n.toFixed(2);
+}
 
-    new Morris.Line({
-      // ID of the element in which to draw the chart.
-      element: 'chart1',
-      // Chart data records -- each entry in this array corresponds to a point on
-      // the chart.
-      data: chartData,
-      // The name of the data record attribute that contains x-values.
-      xkey: 'year',
-      // A list of names of data record attributes that contain y-values.
-      ykeys: ['value'],
-      // Labels for the ykeys -- will be displayed when you hover over the
-      // chart.
-    });
-  });
+var graph = new Rickshaw.Graph( {
+    element: document.querySelector("#chart"),  
+    renderer: 'lineplot',
+    height: 250,
+    width: 300,
+    series: [{
+        color: 'steelblue',
+        data: chartData,
+        name: 'y'
+    }]
+});
+
+var x_ticks = new Rickshaw.Graph.Axis.X( {
+  graph: graph,
+  grid: false,
+  orientation: 'bottom',
+  element: document.getElementById('x_axis'),
+  tickFormat: Rickshaw.Fixtures.Number.formatKMBT
+} );
+
+var y_ticks = new Rickshaw.Graph.Axis.Y( {
+  graph: graph,
+  grid: false,
+  scale: chart.y,
+  orientation: 'left',
+  tickFormat: Rickshaw.Fixtures.Number.formatKMBT,
+  element: document.getElementById('y_axis'),
+} );
+
+
+var hoverDetail = new Rickshaw.Graph.HoverDetail( {
+  graph: graph,
+  formatter: function(series, x, y) {
+    var swatch = '<span class="detail_swatch" style="background-color: ' + series.color + '"></span>';
+    var content = swatch + series.name + ": " + (y) + '<br>';
+    return content;
+  }
+} );
+graph.render();
+  $(".chart-title").html("sdf");   
 }
 
 
 
 function displayData(data) {
-  var html= "";
-  $(data).each(function (d){
-    if( this instanceof Array ) {
-    html +=  displayOneTable(this);
-    }else{
-      //
+  var html = "";
+  $(data).each(function(d) {
+    if (this instanceof Array) {
+      html += displayOneTable(this);
     }
   })
-  
+
   $("#containment-wrapper").html(html);
+  $(data).each(function(d) {
+   if (this.type == 'graph') {
+        displayChart(this);
+      }
+    
+  })
   setWidget();
-  //displayChart(data[1]);
-  $('#invisible-wrapper').css("visibility","hidden");
+  $('#invisible-wrapper').css("visibility", "hidden");
 }
 
 function displayAllTable(tables) {
@@ -197,7 +224,7 @@ function displayAllTable(tables) {
   $.each(tables, function(i, table) {
     html += displayOneTable(table);
   });
-  $("#containment-wrapper").append(html); 
+  $("#containment-wrapper").append(html);
 };
 
 function displayOneTable(table) {
@@ -208,23 +235,23 @@ function displayOneTable(table) {
   });
 
   html += '</tr></thead><tbody>'
-  
+
   nbRows = 0;
 
   $.each(table, function(i, col) {
-    nbRows =  (col.length>nbRows) ? col.length : nbRows ;
+    nbRows = (col.length > nbRows) ? col.length : nbRows;
   });
 
 
-  for(r=0;r<nbRows;r++){
-      html += '<tr style="width: 20px;">'
-      $.each(table, function(i, col) {
-        if (col[r] != undefined)
+  for (r = 0; r < nbRows; r++) {
+    html += '<tr style="width: 20px;">'
+    $.each(table, function(i, col) {
+      if (col[r] != undefined)
         html += '<td style="width: 20px;">' + col[r] + '</td>';
-        else
+      else
         html += '<td style="width: 20px;">' + '' + '</td>';
-     });
-      html += '</tr>';
+    });
+    html += '</tr>';
   }
 
   html += '</tbody></table>'
