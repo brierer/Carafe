@@ -138,10 +138,19 @@ function setDraggableWidget() {
 }
 
 
+function validateChartParameter(p){
+  if (p.title == undefined)  
+    (p.title = "")
+  if (p.color == undefined)
+    (p.color = "steelblue")
+      
+  return p  
+}
 
 function displayChart(chart) {
+  var p = validateChartParameter(chart.p);
 
-   $("#containment-wrapper").append("<span class='chart-container ui-widget-content draggable clearfix' ><div class='chart-title'></div><div id='y_axis'></div><div id='chart' class='chart'></div><div id='x_axis'></div></span>")
+   $("#containment-wrapper").append("<div class='chart-container ui-widget-content draggable'><div class='chart-title'></div><div id='y_axis'></div><div id='chart' class='chart'></div><div id='x_axis'></div></div>")
     var chartData = []
     
 
@@ -162,7 +171,7 @@ var graph = new Rickshaw.Graph( {
     height: 250,
     width: 300,
     series: [{
-        color: 'steelblue',
+        color: p.color,
         data: chartData,
         name: 'y'
     }]
@@ -195,28 +204,28 @@ var hoverDetail = new Rickshaw.Graph.HoverDetail( {
   }
 } );
 graph.render();
-  $(".chart-title").html("sdf");   
+  $(".chart-title").html(p.title);   
 }
 
 
 
 function displayData(data) {
   var html = "";
+  $("#containment-wrapper").html(html);
   $(data).each(function(d) {
     if (this instanceof Array) {
-      html += displayOneTable(this);
+      displayOneTable(this);
+    }
+    if (this.type == 'graph') {
+        displayChart(this);
     }
   })
 
-  $("#containment-wrapper").html(html);
-  $(data).each(function(d) {
-   if (this.type == 'graph') {
-        displayChart(this);
-      }
-    
-  })
+
   setWidget();
+  $(".table-striped > tbody > tr:nth-child(2n+1) > td").css("background-color","pink")
   $('#invisible-wrapper').css("visibility", "hidden");
+
 }
 
 function displayAllTable(tables) {
@@ -228,7 +237,7 @@ function displayAllTable(tables) {
 };
 
 function displayOneTable(table) {
-  var html = '<table class="ui-widget-content draggable table table-bordered table-hover table-striped" style="width: 179px;"><thead style="width: 179px;"><tr>'
+  var html = '<div class="table-container ui-widget-content draggable"> <table class="table table-bordered table-hover table-striped" style="width: 179px;"><thead style="width: 179px;"><tr>'
 
   $.each(table, function(i, col) {
     html += displayOneCol(col);
@@ -254,9 +263,9 @@ function displayOneTable(table) {
     html += '</tr>';
   }
 
-  html += '</tbody></table>'
+  html += '</tbody></table></div>'
   console.log(html);
-  return html;
+  $("#containment-wrapper").append(html); 
 
 };
 
