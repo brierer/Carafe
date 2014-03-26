@@ -214,7 +214,8 @@ function displayData(data) {
   $("#containment-wrapper").html(html);
   $(data).each(function(d) {
     if (this instanceof Array) {
-      displayOneTable(this);
+      var table = validateTableWithArray(this);
+      displayOneTable(table);
     }
     if (this.type == 'graph') {
         displayChart(this);
@@ -223,10 +224,17 @@ function displayData(data) {
 
 
   setWidget();
-  $(".table-striped > tbody > tr:nth-child(2n+1) > td").css("background-color","pink")
   $('#invisible-wrapper').css("visibility", "hidden");
 
 }
+
+function validateTableWithArray(data){
+  var table = {data:data,col:[]}
+  $.each(table.data, function(i, col) {
+    table.col[i] = "col"+(i+1);
+  });
+  return table;
+}  
 
 function displayAllTable(tables) {
   var html = "";
@@ -238,8 +246,7 @@ function displayAllTable(tables) {
 
 function displayOneTable(table) {
   var html = '<div class="table-container ui-widget-content draggable"> <table class="table table-bordered table-hover table-striped" style="width: 179px;"><thead style="width: 179px;"><tr>'
-
-  $.each(table, function(i, col) {
+  $.each(table.col, function(i, col) {
     html += displayOneCol(col);
   });
 
@@ -247,14 +254,14 @@ function displayOneTable(table) {
 
   nbRows = 0;
 
-  $.each(table, function(i, col) {
+  $.each(table.data, function(i, col) {
     nbRows = (col.length > nbRows) ? col.length : nbRows;
   });
 
 
   for (r = 0; r < nbRows; r++) {
     html += '<tr style="width: 20px;">'
-    $.each(table, function(i, col) {
+    $.each(table.data, function(i, col) {
       if (col[r] != undefined)
         html += '<td style="width: 20px;">' + col[r] + '</td>';
       else
@@ -280,7 +287,7 @@ function displayCells(col) {
 
 
 function displayOneCol(col) {
-  var html = '<th style="width: 20px;">Col<i class="hidden fa fa-sort-asc pull-right" ></th>'
+  var html = '<th style="width: 20px;">'+col+'<i class="hidden fa fa-sort-asc pull-right" ></th>'
   return html
 };
 

@@ -38,6 +38,7 @@
 .table-container {
 	display: inline-block;
 	margin-right: 4px;
+	vertical-align:top;
 }
 
 #chart {
@@ -73,7 +74,6 @@
 	display: inline-block;
 	overflow: hidden; 
 	position:relative;
-	top: -16px;
 	margin-right: 4px;
 	padding: 0px 0px 0px 0px;
 	border-style:solid;
