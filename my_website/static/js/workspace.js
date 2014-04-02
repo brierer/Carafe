@@ -220,6 +220,9 @@ function displayData(data) {
     if (this.type == 'graph') {
         displayChart(this);
     }
+    if (this.type == 'table') {  
+        displayOneTable(this);
+    }
   })
 
 
@@ -229,9 +232,9 @@ function displayData(data) {
 }
 
 function validateTableWithArray(data){
-  var table = {data:data,col:[]}
+  var table = {data:data,p:{col:[]}}
   $.each(table.data, function(i, col) {
-    table.col[i] = "col"+(i+1);
+    table.p.col[i] = "col"+(i+1);
   });
   return table;
 }  
@@ -246,7 +249,8 @@ function displayAllTable(tables) {
 
 function displayOneTable(table) {
   var html = '<div class="table-container ui-widget-content draggable"> <table class="table table-bordered table-hover table-striped" style="width: 179px;"><thead style="width: 179px;"><tr>'
-  $.each(table.col, function(i, col) {
+  
+  $.each(table.p.col, function(i, col) {
     html += displayOneCol(col);
   });
 

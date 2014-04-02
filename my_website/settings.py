@@ -130,7 +130,7 @@ INSTALLED_APPS = (
     'blog',
     'book',
     'profil',
-    'calculator',
+    'taskmanager',
 )
 
 LOGIN_URL = "/login" 
