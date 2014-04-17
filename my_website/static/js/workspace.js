@@ -57,7 +57,7 @@ function pollingServerCalcGetResult(nbTry) {
       var timesRun = nbTry;
       console.log('Action ' + (timesRun + 1) + ' started ' + (now - startTime) + 'ms after script start');
       if (data != null) {
-        displayData(data);
+             displayData(data);
         isCalculatingWaiting = false;
       } else {
         setTimeout(function() {
@@ -70,6 +70,8 @@ function pollingServerCalcGetResult(nbTry) {
     isCalculatingWaiting = false;
   }
 }
+
+
 
 $("#dashBoardToggle").click(
   function() {
@@ -208,8 +210,35 @@ graph.render();
 }
 
 
-
 function displayData(data) {
+  if (data.statut == "ok")
+  {
+    displayResult(data.res);
+  }else if (data.statut == 'tko' ){
+    displayBadEval(data);
+  }else if (data.statut == 'ko'){
+    displayError(data);
+  }
+}
+
+
+function displayError(data) {
+  var html = "";
+  html += data.res;
+  html += "<br/>"
+  html += JSON.stringify(data.stack);
+  $("#containment-wrapper").html(html);
+}
+
+function displayBadEval(data) {
+  var html = "";
+  html += data.res;
+  html += "<br/>"
+  html += JSON.stringify(data.stack);
+  $("#containment-wrapper").html(html);
+}
+
+function displayResult(data) {
   var html = "";
   $("#containment-wrapper").html(html);
   $(data).each(function(d) {
@@ -220,7 +249,7 @@ function displayData(data) {
     if (this.type == 'graph') {
         displayChart(this);
     }
-    if (this.type == 'table') {  
+    if (this.type == 'table') { 
         displayOneTable(this);
     }
   })
@@ -255,14 +284,13 @@ function displayOneTable(table) {
   });
 
   html += '</tr></thead><tbody>'
-
+ 
   nbRows = 0;
 
   $.each(table.data, function(i, col) {
     nbRows = (col.length > nbRows) ? col.length : nbRows;
   });
-
-
+ 
   for (r = 0; r < nbRows; r++) {
     html += '<tr style="width: 20px;">'
     $.each(table.data, function(i, col) {
