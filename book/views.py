@@ -17,7 +17,6 @@ def get_client_ip(request):
         ip = request.META.get('REMOTE_ADDR')
     return ip
 
-
 def validate_send_calc(form, request):
 	if form.is_valid():
 			formulas = form.cleaned_data['formulas']
@@ -35,7 +34,6 @@ def validate_send_calc(form, request):
 	
 def generate_calc_key(request, time_id):
 	return get_client_ip(request) + str(time_id)
-
 
 def post_calc_result(request):
 	if request.method == 'POST':  
@@ -55,7 +53,6 @@ def get_calc_result(request):
 		resultat = getResult(key ,1)	
 		return HttpResponse(json.dumps(resultat), content_type="application/json")
 
-
 def get_book(request, book_id):
 	book = get_book_by_Id(book_id)
 	formulas =	book.formulas	
@@ -73,8 +70,6 @@ def watch_book(request,book_id):
 	key = generate_calc_key(request,time_calc) 
 	resultat = initCalc(key, formulas)
 	return render(request, 'book/dashboard.html', locals()) 
-
-
 
 def create_book(request):
 	print request.method
