@@ -17,24 +17,6 @@ def get_client_ip(request):
         ip = request.META.get('REMOTE_ADDR')
     return ip
 
-def get_calc_result(request):
-	form_id = request.GET.get('form_id', 'default')
-	key = get_client_ip(request) + form_id
-	if request.method == 'GET':  # S'il s'agit d'une requête POST
-		resultat = getResult(key ,1)	
-		return HttpResponse(json.dumps(resultat), content_type="application/json")
-
-
-def post_calc_result(request):
-	if request.method == 'POST':  # S'il s'agit d'une requête POST
-		form = FormulasForm(request.POST)  # Nous reprenons les données
-		validate_send_calc(form, request)
-		return HttpResponse(json.dumps(None), content_type="application/json")
-	else:
-		response_data = {}
-		response_data['result'] = 'failed'
-		response_data['message'] = 'You messed up'
-		return HttpResponse(json.dumps(response_data), content_type="application/json")	
 
 def validate_send_calc(form, request):
 	if form.is_valid():
@@ -44,7 +26,7 @@ def validate_send_calc(form, request):
 			formulas = filter(lambda a: ord(a) != 13 , formulas)
 			key = generate_calc_key(request,form_id)
 			resultat = initCalc(key, formulas)
-			book = Book.objects.get(id=book_id)# a modifier
+			book = Book.objects.get(id=book_id)
 			book.formulas =	formulas
 			book.save()
 			return True
@@ -54,17 +36,24 @@ def validate_send_calc(form, request):
 def generate_calc_key(request, time_id):
 	return get_client_ip(request) + str(time_id)
 
-def create_book(request):
-	print request.method
-	if request.method == 'POST':  # S'il s'agit d'une requête POST
-		form = CreateBookForm(request.POST)  # Nous reprenons les données
-		if form.is_valid():
-			title = form.cleaned_data['title']
-			book = Book(title=title, user_id = request.user.id)
-			book.save()
-			book_id = book.id
-			return render(request, 'book/workspace.html', locals())
-	return redirect('/profil/account/')		
+
+def post_calc_result(request):
+	if request.method == 'POST':  
+		form = FormulasForm(request.POST) 
+		validate_send_calc(form, request)
+		return HttpResponse(json.dumps(None), content_type="application/json")
+	else:
+		response_data = {}
+		response_data['result'] = 'failed'
+		response_data['message'] = 'You messed up'
+		return HttpResponse(json.dumps(response_data), content_type="application/json")	
+
+def get_calc_result(request):
+	form_id = request.GET.get('form_id', 'default')
+	key = get_client_ip(request) + form_id
+	if request.method == 'GET':  
+		resultat = getResult(key ,1)	
+		return HttpResponse(json.dumps(resultat), content_type="application/json")
 
 
 def get_book(request, book_id):
@@ -84,3 +73,17 @@ def watch_book(request,book_id):
 	key = generate_calc_key(request,time_calc) 
 	resultat = initCalc(key, formulas)
 	return render(request, 'book/dashboard.html', locals()) 
+
+
+
+def create_book(request):
+	print request.method
+	if request.method == 'POST': 
+		form = CreateBookForm(request.POST)  
+		if form.is_valid():
+			title = form.cleaned_data['title']
+			book = Book(title=title, user_id = request.user.id)
+			book.save()
+			book_id = book.id
+			return render(request, 'book/workspace.html', locals())
+	return redirect('/profil/account/')		
