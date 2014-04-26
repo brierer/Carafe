@@ -28,25 +28,31 @@ def get_calc_result(request):
 def post_calc_result(request):
 	if request.method == 'POST':  # S'il s'agit d'une requête POST
 		form = FormulasForm(request.POST)  # Nous reprenons les données
-		if form.is_valid():
-			formulas = form.cleaned_data['formulas']
-			form_id = form.cleaned_data['form_id']
-			book_id = form.cleaned_data['book_id']
-			formulas = filter(lambda a: ord(a) != 13 , formulas)
-			key = get_client_ip(request) + form_id
-			resultat = initCalc(key, formulas)
-			if (resultat is not None):
-				result = resultat[0]
-				chart = resultat[1]
-			book = Book.objects.get(id=book_id)# a modifier
-			book.formulas =	formulas
-			book.save()
-		return HttpResponse(json.dumps(resultat), content_type="application/json")
+		validate_send_calc(form, request)
+		return HttpResponse(json.dumps(None), content_type="application/json")
 	else:
 		response_data = {}
 		response_data['result'] = 'failed'
 		response_data['message'] = 'You messed up'
 		return HttpResponse(json.dumps(response_data), content_type="application/json")	
+
+def validate_send_calc(form, request):
+	if form.is_valid():
+			formulas = form.cleaned_data['formulas']
+			form_id = form.cleaned_data['form_id']
+			book_id = form.cleaned_data['book_id']
+			formulas = filter(lambda a: ord(a) != 13 , formulas)
+			key = generate_calc_key(request,form_id)
+			resultat = initCalc(key, formulas)
+			book = Book.objects.get(id=book_id)# a modifier
+			book.formulas =	formulas
+			book.save()
+			return True
+	else: 
+			return False		
+	
+def generate_calc_key(request, time_id):
+	return get_client_ip(request) + str(time_id)
 
 def create_book(request):
 	print request.method
@@ -64,9 +70,17 @@ def create_book(request):
 def get_book(request, book_id):
 	book = get_book_by_Id(book_id)
 	formulas =	book.formulas	
-	form = FormulasForm()  # Nous créons un formulaire vide
-	form.setKey(book_id)
+	time_calc = time.time()
+	key = generate_calc_key(request,time_calc) 
+	resultat = initCalc(key, formulas)
+	form = FormulasForm()  #
+	form.setKey(book_id, time_calc)
 	return render(request, 'book/workspace.html', locals())  
 
-def evaluate_formulas(request, book_id): 
-	return get_book(request, book_id) 
+def watch_book(request,book_id):
+	book = get_book_by_Id(book_id)
+	formulas =	book.formulas	
+	time_calc = time.time()
+	key = generate_calc_key(request,time_calc) 
+	resultat = initCalc(key, formulas)
+	return render(request, 'book/dashboard.html', locals()) 

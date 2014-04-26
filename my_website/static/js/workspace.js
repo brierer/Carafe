@@ -24,7 +24,7 @@ $(function() {
   });
 
   $("#editor").css("visibility", "visible");
-  eqEvaluation();
+  initPollingGetCalcResult();
 })
 
 var startTime = new Date().getTime();

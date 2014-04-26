@@ -379,7 +379,7 @@
 
         <div id="page-wrapper">
         <br/>
-     <form id="editor" method=post action="{% url book.views.evaluate_formulas book_id %}">
+     <form id="editor" method=post action="{% url "book.views.get_book" book_id %}">
     {% csrf_token %}
     <div class="panel panel-default">
     <div class="panel-heading">
@@ -395,17 +395,7 @@
 </form> 
   </div> 
 
-<div id="dashboard" class="panel panel-default">
-  <div class="panel-heading">
-  	 <i class="fa fa-dashboard fa-fw"></i> Dashboard
-  </div>
-   <div id="containment-wrapper" class="panel-body" style="height:1000px">
-
-   </div>
-     <div id="invisible-wrapper"   class="panel-body" style="height:1000px">
-   </div>
-        </div>
-        <!-- /#page-wrapper -->
+{% include "book/dashboard.html" %} 
 <div id="contextMenu" class="dropdown clearfix">
     <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu" style="display:block;position:static;margin-bottom:5px;">
         <li><a tabindex="-1" href="#">Action</a></li>

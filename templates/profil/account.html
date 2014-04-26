@@ -44,12 +44,12 @@
                         <i class="fa fa-user fa-fw"></i>  <i class="fa fa-caret-down"></i>
                     </a>
                     <ul class="dropdown-menu dropdown-user">
-                        <li><a href="{% url profil.views.user_account %}"><i class="fa fa-user fa-fw"></i> User Profile</a>
+                        <li><a href="{% url "profil.views.user_account" %}"><i class="fa fa-user fa-fw"></i> User Profile</a>
                         </li>
                         <li><a href="#"><i class="fa fa-gear fa-fw"></i> Settings</a>
                         </li>
                         <li class="divider"></li>
-                        <li><a href="{% url profil.views.user_logout %}"><i class="fa fa-sign-out fa-fw"></i> Logout</a>
+                        <li><a href="{% url "profil.views.user_logout" %}"><i class="fa fa-sign-out fa-fw"></i> Logout</a>
                         </li>
                     </ul>
                     <!-- /.dropdown-user -->
@@ -124,7 +124,7 @@
 <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
-         <form method=post action="{% url book.views.createBook %}">
+         <form method=post action="{% url "book.views.createBook" %}">
     {% csrf_token %}
       <div class="modal-body form-group" >
         <label for="id_title">Title:</label> <input class="form-control" id="id_title" type="text" name="title" maxlength="100" placeholder="Enter Title">
