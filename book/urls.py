@@ -11,4 +11,5 @@ urlpatterns = patterns('book.views',
 	url(r'^books', 'create_book'),
 	url(r'^postCalcResult', 'post_calc_result'),
 	url(r'^getCalcResult/$', 'get_calc_result'),
+	url(r'^watch/getCalcResult/$', 'get_calc_result'),
 	)

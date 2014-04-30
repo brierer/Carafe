@@ -135,7 +135,8 @@ function setIconTable() {
 
 function setDraggableWidget() {
   $(".ui-widget-content").draggable({
-    containment: "parent"
+    containment: "parent",
+    handle: "thead" 
   });
 }
 
@@ -263,49 +264,28 @@ function displayResult(data) {
 function validateTableWithArray(data){
   var table = {data:data,p:{col:[]}}
   $.each(table.data, function(i, col) {
-    table.p.col[i] = "col"+(i+1);
+    table.p.col = true;
   });
   return table;
 }  
 
-function displayAllTable(tables) {
-  var html = "";
-  $.each(tables, function(i, table) {
-    html += displayOneTable(table);
-  });
-  $("#containment-wrapper").append(html);
-};
 
 function displayOneTable(table) {
-  var html = '<div class="table-container ui-widget-content draggable"> <table class="table table-bordered table-hover table-striped" style="width: 179px;"><thead style="width: 179px;"><tr>'
+   $("#containment-wrapper").append("<div class='table-container ui-widget-content draggable'><div class='handsontable-wrapper'></div<</div>")  
+
+
+  var widthTable = Math.min(75*table.data[0].length,750);
   
-  $.each(table.p.col, function(i, col) {
-    html += displayOneCol(col);
+  $('#containment-wrapper div').last().outerWidth(widthTable);
+  
+  $('#containment-wrapper div.handsontable-wrapper').last().handsontable({
+    data: table.data,
+    colHeaders: table.p.col,
+    minSpareRows: 1,
+    contextMenu: true,
+    stretchH: 'all',
+    width: widthTable,
   });
-
-  html += '</tr></thead><tbody>'
- 
-  nbRows = 0;
-
-  $.each(table.data, function(i, col) {
-    nbRows = (col.length > nbRows) ? col.length : nbRows;
-  });
- 
-  for (r = 0; r < nbRows; r++) {
-    html += '<tr style="width: 20px;">'
-    $.each(table.data, function(i, col) {
-      if (col[r] != undefined)
-        html += '<td style="width: 20px;">' + col[r] + '</td>';
-      else
-        html += '<td style="width: 20px;">' + '' + '</td>';
-    });
-    html += '</tr>';
-  }
-
-  html += '</tbody></table></div>'
-  console.log(html);
-  $("#containment-wrapper").append(html); 
-
 };
 
 function displayCells(col) {
@@ -355,3 +335,6 @@ $("#btn_eval").click(
   function() {
     eqEvaluation();
   });
+
+
+

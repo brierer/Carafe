@@ -1,52 +1,55 @@
-{% load static %}
+   {% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<meta name="description" content="">
-	<meta name="author" content="">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
 
-	<title>Carafe</title>
+    <title>Carafe</title>
 
-	<!-- Bootstrap core CSS -->
-	<link href="{{ STATIC_URL }}css/bootstrap.css" rel="stylesheet">
+    <!-- Bootstrap core CSS -->
+    <link href="{{ STATIC_URL }}css/bootstrap.css" rel="stylesheet">
 
-	<!-- Custom Google Web Font -->
-	<link href="{{ STATIC_URL }}font-awesome/css/font-awesome.min.css" rel="stylesheet">
-	<link href='http://fonts.googleapis.com/css?family=Lato:100,300,400,700,900,100italic,300italic,400italic,700italic,900italic' rel='stylesheet' type='text/css'>
+    <!-- Custom Google Web Font -->
+    <link href="{{ STATIC_URL }}font-awesome/css/font-awesome.min.css" rel="stylesheet">
+    <link href='http://fonts.googleapis.com/css?family=Lato:100,300,400,700,900,100italic,300italic,400italic,700italic,900italic' rel='stylesheet' type='text/css'>
 
-	<!-- Add custom CSS here -->
-	<link href="{{ STATIC_URL }}css/landing-page.css" rel="stylesheet">
+    <!-- Add custom CSS here -->
+    <link href="{{ STATIC_URL }}css/jquery.handsontable.full.css" rel="stylesheet">
+    <link href="{{ STATIC_URL }}css/landing-page.css" rel="stylesheet">
     <link href="{{ STATIC_URL }}css/sb-admin.css" rel="stylesheet">
-	<link href="{{ STATIC_URL }}css/workspace.css" rel="stylesheet">
+    <link href="{{ STATIC_URL }}css/workspace.css" rel="stylesheet">
     <link href="{{ STATIC_URL }}css/elegant.css" rel="stylesheet">
     <link href="{{ STATIC_URL }}css/codemirror.css" rel="stylesheet">
     <link href="{{ STATIC_URL }}css/rickshaw.css" rel="stylesheet">
 </head>
 <body>
+    {% block wrapper %}
     <div id="wrapper">
-        {% include "book/navigation.html" %} 
-        <div id="page-wrapper">
-        <br/>
-        {% include "book/form.html" %} 
-        </div> 
-        {% include "book/dashboard.html" %}     
-    </div>
-	<!-- JavaScript -->
-	<script src="{{ STATIC_URL }}js/jquery-1.10.2.js"></script>
-	<script src="{{ STATIC_URL }}js/jquery-ui.js"></script>
+            {% include "book/navigation.html" %}
+            <div id="page-wrapper"> 
+            {% include "book/form.html" %} 
+            {% include "book/dashboard.html" %}
+            </div>     
+    </div>    
+    {% endblock %}
+    <!-- JavaScript -->
+    <script src="{{ STATIC_URL }}js/jquery-1.10.2.js"></script>
+    <script src="{{ STATIC_URL }}js/jquery-ui.js"></script>
+    <script src="{{ STATIC_URL }}js/jquery.handsontable.full.js"></script>
     <script src="{{ STATIC_URL }}js/vendor/d3.min.js"></script> 
     <script src="{{ STATIC_URL }}js/vendor/d3.layout.min.js"></script> 
     <script src="{{ STATIC_URL }}js/rickshaw.js"></script> 
-	<script src="{{ STATIC_URL }}js/bootstrap.js"></script>
-	<script src="{{ STATIC_URL }}js/sb-admin.js"></script>
+    <script src="{{ STATIC_URL }}js/bootstrap.js"></script>
+    <script src="{{ STATIC_URL }}js/sb-admin.js"></script>
     <script src="{{ STATIC_URL }}js/codemirror.js"></script>
     <script src="{{ STATIC_URL }}js/haskell.js"></script>
-	<script src="{{ STATIC_URL }}js/workspace.js"></script>
+    <script src="{{ STATIC_URL }}js/workspace.js"></script>
   
 
-	  <!-- Core Scripts - Include with every page -->
+      <!-- Core Scripts - Include with every page -->
     <script src="{{ STATIC_URL }}js/plugins/metisMenu/jquery.metisMenu.js"></script>
 
     <!-- Page-Level Plugin Scripts - Dashboard -->

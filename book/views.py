@@ -69,7 +69,9 @@ def watch_book(request,book_id):
 	time_calc = time.time()
 	key = generate_calc_key(request,time_calc) 
 	resultat = initCalc(key, formulas)
-	return render(request, 'book/dashboard.html', locals()) 
+	form = FormulasForm()  #
+	form.setKey(book_id, time_calc)
+	return render(request, 'book/watch.html', locals()) 
 
 def create_book(request):
 	print request.method
