@@ -57,7 +57,7 @@ function pollingServerCalcGetResult(nbTry) {
       var timesRun = nbTry;
       console.log('Action ' + (timesRun + 1) + ' started ' + (now - startTime) + 'ms after script start');
       if (data != null) {
-             displayData(data);
+             displayData(data.eval);
         isCalculatingWaiting = false;
       } else {
         setTimeout(function() {
@@ -66,7 +66,7 @@ function pollingServerCalcGetResult(nbTry) {
       }
     });
   } else {
-    alert("Hummm, this is fucking long");
+    console.log("Hummm, this is fucking long");
     isCalculatingWaiting = false;
   }
 }
@@ -242,16 +242,16 @@ function displayBadEval(data) {
 function displayResult(data) {
   var html = "";
   $("#containment-wrapper").html(html);
-  $(data).each(function(d) {
+  $(data).each(function(id, d) {
     if (this instanceof Array) {
       var table = validateTableWithArray(this);
-      displayOneTable(table);
+      displayOneTable(table, id);
     }
     if (this.type == 'graph') {
         displayChart(this);
     }
     if (this.type == 'table') { 
-        displayOneTable(this);
+        displayOneTable(this, id);
     }
   })
 
@@ -270,7 +270,7 @@ function validateTableWithArray(data){
 }  
 
 
-function displayOneTable(table) {
+function displayOneTable(table, id) {
    $("#containment-wrapper").append("<div class='table-container ui-widget-content draggable'><div class='handsontable-wrapper'></div<</div>")  
 
 
@@ -285,7 +285,9 @@ function displayOneTable(table) {
     contextMenu: true,
     stretchH: 'all',
     width: widthTable,
+    afterChange: function(hook) {if (hook!=null) changeTableValue(hook,id)}
   });
+
 };
 
 function displayCells(col) {
@@ -334,7 +336,142 @@ $("a").dblclick(function() {
 $("#btn_eval").click(
   function() {
     eqEvaluation();
+   
   });
 
+String.prototype.splitKeep = function (splitter, ahead) {
+        var self = this;
+        var result = [];
+        // Substitution of matched string
+        function getSubst(value) {
+          var substChar = value[0] == '0' ? '1' : '0';
+          var subst = '';
+          for (var i = 0; i < value.length; i++) {
+              subst += substChar;
+          }
+          return subst;
+         };
+        if (splitter != '') {
+            var matches = [];
+            // Getting mached value and its index
+            var replaceName = splitter instanceof RegExp ? "replace" : "replaceAll";
+            var r = self[replaceName](splitter, function (m, i, e) {
+                matches.push({ value: m, index: i });
+                return getSubst(m);
+            });
+            // Finds split substrings
+            var lastIndex = 0;
+            for (var i = 0; i < matches.length; i++) {
+                var m = matches[i];
+                var nextIndex = ahead == true ? m.index : m.index + m.value.length;
+                if (nextIndex != lastIndex) {
+                    var part = self.substring(lastIndex, nextIndex);
+                    result.push(part);
+                    lastIndex = nextIndex;
+                }
+            };
+            if (lastIndex < self.length) {
+                var part = self.substring(lastIndex, self.length);
+                result.push(part);
+            };
+              
+        }
+        else {
+            result.add(self);
+        };
+        return result;
+    };
+
+ changeTableValue(2,2);
+function changeTableValue(hook, id){
+  var text = $("#id_formulas").html()
+  var equations = splitEquations(text)
+  var code ={}
+  equations.forEach(function(value , i){
+    code[i] = convertEquation(value);
+  })
+  alert(JSON.stringify(code[0]))
+  } 
+  
 
 
+function splitEquations(text){
+  var patt = /\n+(?=[a-z][a-zA-Z]*\s*=)/gm;
+  return text.splitKeep(patt)
+}
+
+function splitEquation(text){
+ var patt = /\s?=\s?/gm;
+ return text.splitKeep(patt)
+}
+
+function splitTag(text){
+  var tag = text.match(/[a-z][a-zA-Z]*(?=\s*=)/g)
+  return tag[0]
+}
+
+
+
+function convertEquation(equation) {
+  var equationSplitted = splitEquation(equation)
+  var tagSplitted =  splitTag(equationSplitted[0]) 
+  var equation = {'tag':tagSplitted, 'value': convertValue(equationSplitted[1])}
+  return equation
+}
+
+function convertValue(text) {
+  if (isArray(text))    {return convertArray(text)} 
+  if (isFunction(text))  {return convertFunction(text)}
+  if (isNumber)  {return convertNumber(text)}
+  if (isString(text)) {return convertString(text)}
+  if (isBool(text)) {return convertBool(text)}  
+}
+
+function convertArray(text){
+  return {type:'Arr',val:text}
+
+}
+
+function convertSubValues(text){
+
+}
+
+function convertFunction(text){
+   var patt = /([a-z][a-zA-z]*|.*)/g
+   var splitFunction = text.match(patt);
+   return {type:'Func','name':splitFunction[0],'val':convertSubValues(splitFunction[1])}
+}
+function convertNumber(text){
+   return {type:'Arr',val:text}
+}
+function convertString(text){
+  return {type:'Str',val:text}
+}
+function convertBool(text){
+  return {type:'Bool',val:text}
+}
+
+function isBool(text){
+  var patt = /(true|false)/
+  return patt.test(text)
+}
+
+function isString(text){
+ var patt = /".*/
+return patt.test(text)
+}
+
+function isNumber(text) {
+  var patt = /^-?\d*\.?\d*$/
+  return patt.test(text)
+}
+
+function isArray(text){
+  var patt = /^(\[).*/g
+  return patt.test(text)
+}
+
+function isFunction(text){
+  var patt = /[a-z][a-zA-Z]*\s?\(/g
+  return patt.test(text) 
+}
