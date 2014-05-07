@@ -4,7 +4,7 @@ import simplejson as json
 import redis
 import pika
 import time
-
+from collections import OrderedDict
 
 class Receiver:
     class __OnlyOne:
@@ -66,6 +66,7 @@ class Sender:
       
 
 def initCalc(key, formulas):
+    print formulas
     Receiver().clear(key)
     sender = Sender().sendMessage(key+";"+formulas)
     print " [x] Sent " + key
@@ -76,7 +77,7 @@ def getResult(key, id):
     result = Receiver().getLastMessageFrom(key)
     if (result == ""):
         return None
-    convertJSON = json.loads(result) 
-    print convertJSON  
+    convertJSON = json.loads(result,object_pairs_hook=OrderedDict) 
+    print result  
     return convertJSON
 

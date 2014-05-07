@@ -55,7 +55,8 @@ def get_calc_result(request):
 
 def get_book(request, book_id):
 	book = get_book_by_Id(book_id)
-	formulas =	book.formulas	
+	formulas =	book.formulas
+	print formulas[0]	
 	time_calc = time.time()
 	key = generate_calc_key(request,time_calc) 
 	resultat = initCalc(key, formulas)

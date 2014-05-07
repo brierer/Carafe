@@ -57,7 +57,6 @@ function pollingServerCalcGetResult(nbTry) {
       var timesRun = nbTry;
       console.log('Action ' + (timesRun + 1) + ' started ' + (now - startTime) + 'ms after script start');
       if (data != null) {
-        $("#sdf").css('color', 'red');
         displayData(data);
         isCalculatingWaiting = false;
       } else {
@@ -294,12 +293,10 @@ function displayOneTable(parse, table, id) {
     width: widthTable,
     cells: function(row, col, prop) {
       var cellProperties = {};
-      cellProperties.readOnly = (isColReadOnly(col, parse, id))
+      cellProperties.readOnly = isColReadOnly(col, parse, id)
       return cellProperties;
-    },
-    afterChange: function(hook) {
-      if (hook != null) changeTableValue(hook, id)
     }
+
   });
 
 };
@@ -356,15 +353,17 @@ $("#btn_eval").click(
 
 function decodeParse(parse) {
   var text = ""
-  parse.forEach(function(val, i) {
-    text += decodeEquation(val);
-  })
+
+  for (var val in parse) {
+    text += decodeEquation(parse, val);
+  }
+
   //console.log(text);
   return text
 }
 
-function decodeEquation(parse) {
-  return parse[0] + " = " + decodeVal(parse[1]);
+function decodeEquation(parse, val) {
+  return val + " = " + decodeVal(parse[val]);
 }
 
 function decodeVal(parse) {
@@ -438,9 +437,7 @@ function decodeSingleValue(tag, contents) {
 
 
 function getFunction(name, i) {
-    
   return function(parse) {
-    console.log(JSON.stringify(parse))
     if (parse.v.f !== undefined) {
       if (parse.v.f.name == name) {
         return parse.v.f.arg[i]
@@ -454,7 +451,6 @@ function getFunction(name, i) {
 
 function getArray(i) {
   return function(parse) {
-  console.log(JSON.stringify(parse))
     if (parse.v.a !== undefined) {
       return parse.v.a[i]
     }
@@ -463,44 +459,52 @@ function getArray(i) {
 }
 
 function isArray(parse) {
-    if (parse.v.a !== undefined){
-      return parse.v.a;
+  if (parse.v.a !== undefined) {
+    return parse.v.a;
+  }
+  return null;
+}
+
+
+function isVariable(parse) {
+  if (parse.v.f !== undefined) {
+    if (parse.v.f.arg.length == 0) {
+      return parse.v.f
+    } else {
+      return null
     }
-    return null;    
+  }
+  return null
+}
+
+
+function bindAll(parse, maybe, binds) {
+  binds.forEach(function(fn, i) {
+    maybeVariable = maybe.bind(isVariable)
+    if (maybeVariable.isNothing()) {
+      maybe = maybe.bind(fn);
+    } else {
+      maybe = Maybe(parse[maybeVariable.val().name])
+      maybe = maybe.bind(fn);
+    }
+  })
+  return maybe
 }
 
 function isColReadOnly(col, parse, id) {
-console.log(JSON.stringify(parse[0][1]))
-  m = Maybe(parse[0][1])
-  .bind(getFunction("show",0))
-  .bind(getArray(id))
-  .bind(getFunction("table",0))
-  .bind(getArray(col))
-  .bind(isArray)
-  
-  return ((!m.isNothing()))
-  /* var arg = parse[0][1].v.f.arg[0]
 
-  var f = arg.v.a[id].v.f;
-  console.log(JSON.stringify(f))
-  if (f.name == 'table' && f.arg !== undefined && f.arg[0].v.a[0].v.a !== undefined) {
-    return false
-  }
-*/
-  //  return true
-  // }
-  //  if (isFunction(p.tag).tag=='FunctionValue'){
-  //  if (p.contents.contents[0]=='table' && p.contents.contents[1].tag=='ArrayValue'){
-  //   if (p.contents.contents[1].tag.contents.tag == 'ArrayValue'){
-  //     return true
-  //   }
-  //  }
-  // }
-  // if (p[col]!='ArrayValue' && p[col]!='FunctionValue'){
-  //  return true;
-  //}
+  getDisplayItem = Maybe(parse.show)
+    .bind(getFunction("show", 0))
+    .bind(getArray(id))
 
-  return false
+  getTableCol = getDisplayItem
+    .bind(getFunction("table", 0))
+    .bind(getArray(col))
+    .bind(isArray)
+
+  getArrayCol = bindAll(parse, getDisplayItem, [getArray(col), isArray])
+
+  return getTableCol.isNothing() && getArrayCol.isNothing() // !m1.isNothing()
 }
 
 
