@@ -298,14 +298,36 @@ function displayOneTable(parse, table, id) {
       return cellProperties;
     },
     afterChange: function(hooks) {
+      console.log(JSON.stringify(hooks))
+      var table = this
+
+
+
       if (hooks != null) {
         hooks.forEach(function(hook, i) {
+          for (var i = 0; i < 2; i++) {
+            if (table.getDataAtCell(i, hook[1]) == null) {
+              table.setDataAtCell(i, hook[1], "")
+            }
+          }
+
           changeValue(hook, parse, id);
+          if (hook[0] + 1 == table.countRows()) {
+            var cells = table.getDataAtRow(hook[0]);
+            cells.forEach(function(val, i) {
+              if (val == "") {
+                table.setDataAtCell(hook[0], i, null)
+              }
+            })
+          }
         })
+
       }
+
     },
     afterRemoveRow: function(hook) {
       removeRow(hook, parse, id);
+
     }
 
   });
@@ -564,6 +586,7 @@ function removeRow(hook, parse, id) {
         }
       }
     })
+    decodeParse(parse);
   }
 
   // getArrayCol = bindAll(parse, getDisplayItem, [getArray(hook[1]), isArray])
@@ -589,12 +612,12 @@ function removeFromVariable(hook, subParse, parse) {
 }
 
 function addOrChangeSingleValue(hook, subParse, parse) {
-     console.log(JSON.stringify(subParse))
+  console.log(JSON.stringify(subParse))
   if (subParse.v != undefined && subParse.v.f != undefined && subParse.v.f.arg == 0) {
     addOrChangeSingleValue(hook, parse[subParse.v.f.name], parse);
   } else {
-    if (hook[2] == null || hook[2] == "") {
-       console.log(JSON.stringify(subParse))
+    if (hook[2] == null) {
+      console.log(JSON.stringify(subParse))
       addSingleValue(hook, subParse)
     } else {
       if (subParse[hook[0]] != undefined) {
@@ -613,7 +636,7 @@ function addOrChangeSingleValue(hook, subParse, parse) {
 
 
 function changeVariable(hook, subParse, parse) {
-
+  console.log(JSON.stringify(subParse))
   if (subParse.f != undefined && subParse.f.arg.length == 0) {
     var valueToChange = parse[subParse.f.name].v;
     console.log(JSON.stringify(valueToChange))
@@ -624,18 +647,24 @@ function changeVariable(hook, subParse, parse) {
 }
 
 function addSingleValue(hook, subParse) {
-  console.log("ici")
   var value = {}
   if (hook[3] == "false" || hook[3] == "true") {
-    value = createVal(hook, subParse, changePbool)
+    value = createVal(hook[3], subParse, changePbool)
   } else if (hook[3] != "" && !isNaN(hook[3])) {
-    value = createVal(hook, subParse, changePnum)
+    value = createVal(hook[3], subParse, changePnum)
   } else {
-    value = createVal(hook, subParse, changePstring)
+    value = createVal(hook[3], subParse, changePstring)
   }
+
+  var diff = hook[0] - subParse.length - 1
+  while (diff >= 0) {
+    var empty = createVal("", subParse, changePstring)
+    subParse.push(empty);
+    diff--
+  }
+
   subParse.push(value);
 }
-
 
 
 
@@ -643,17 +672,17 @@ function changeSingleValue(hook, subParse) {
   var value = {}
   console.log(JSON.stringify(subParse))
   if (hook[3] == "false" || hook[3] == "true") {
-    value = changePbool(hook, subParse)
+    value = changePbool(hook[3], subParse)
   } else if (hook[3] != "" && !isNaN(hook[3])) {
-    value = changePnum(hook, subParse);
+    value = changePnum(hook[3], subParse);
   } else {
-    value = changePstring(hook, subParse);
+    value = changePstring(hook[3], subParse);
   }
 }
 
 function changePbool(hook, subParse) {
   subParse.tag = 'Pbool'
-  if (hook[3] == "false")
+  if (hook == "false")
     subParse.contents = false
   else {
     subParse.contents = true
@@ -662,12 +691,12 @@ function changePbool(hook, subParse) {
 
 function changePstring(hook, subParse) {
   subParse.tag = 'Pstring'
-  subParse.contents = hook[3]
+  subParse.contents = hook
 }
 
 function changePnum(hook, subParse) {
   subParse.tag = 'Pnum'
-  subParse.contents = Number(hook[3])
+  subParse.contents = Number(hook)
 }
 
 function createVal(hook, subParse, fn) {
