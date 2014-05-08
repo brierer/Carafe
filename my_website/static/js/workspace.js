@@ -294,11 +294,10 @@ function displayOneTable(parse, table, id) {
     width: widthTable,
     cells: function(row, col, prop) {
       var cellProperties = {};
-      cellProperties.readOnly = isColReadOnly(col, parse, id)
+      cellProperties.readOnly = isColReadOnly(row, col, parse, id)
       return cellProperties;
     },
     afterChange: function(hooks) {
-      console.log(JSON.stringify(hooks))
       var table = this
 
 
@@ -405,7 +404,6 @@ function decodeVal(parse) {
   s1 = parse.s1
   s2 = parse.s2
   var value = parse.v
-  //console.log(JSON.stringify(value))
   if (value.a !== undefined) {
     v = decodeArray(value.a)
   } else if (value.f !== undefined) {
@@ -485,7 +483,7 @@ function getFunction(name, i) {
 
 function getElemOfArray(i) {
   return function(parse) {
-    if (parse.v.a !== undefined) {
+    if (parse.v !== undefined && parse.v.a !== undefined) {
       return parse.v.a[i]
     }
     return null
@@ -503,7 +501,7 @@ function isArray(parse) {
 
 
 function isVariable(parse) {
-  if (parse.v.f !== undefined) {
+  if (parse.v !== undefined && parse.v.f !== undefined) {
     if (parse.v.f.arg.length == 0) {
       return parse.v.f
     } else {
@@ -514,9 +512,25 @@ function isVariable(parse) {
 }
 
 
+function isSingleValue(parse) {
+
+  if (parse.v !== undefined && parse.v.tag !== undefined) {
+    return parse.v
+  }
+
+  return null
+}
+
+
 function bindAll(parse, maybe, binds) {
   binds.forEach(function(fn, i) {
     maybeVariable = maybe.bind(isVariable)
+
+
+  if (!maybe.isNothing()) {
+    console.log(JSON.stringify(maybe.val()));
+  }
+
     if (maybeVariable.isNothing()) {
       maybe = maybe.bind(fn);
     } else {
@@ -525,25 +539,30 @@ function bindAll(parse, maybe, binds) {
     }
   })
 
+ // if (maybe.bind(isSingleValue).isNothing()) {
+  //  return Maybe(null);
+  //}
+ 
   return maybe
 }
 
-function isColReadOnly(col, parse, id) {
+function isColReadOnly(row, col, parse, id) {
 
   getDisplayItem = Maybe(parse.show)
     .bind(getFunction("show", 0))
     .bind(getElemOfArray(id))
 
-  getTableCol = bindAll(parse, getDisplayItem, [getFunction("table", 0), getElemOfArray(col), isArray])
+  getTableCol = bindAll(parse, getDisplayItem, [getFunction("table", 0), getElemOfArray(col), getElemOfArray(row), isSingleValue])
 
-  getArrayCol = bindAll(parse, getDisplayItem, [getElemOfArray(col), isArray])
+  getArrayCol = bindAll(parse, getDisplayItem, [getElemOfArray(col), getElemOfArray(row), isSingleValue])
 
   return getTableCol.isNothing() && getArrayCol.isNothing() // !m1.isNothing()
+
 }
 
 
 function changeValue(hook, parse, id) {
-  console.log(JSON.stringify(hook));
+  
   getDisplayItem = Maybe(parse.show)
     .bind(getFunction("show", 0))
     .bind(getElemOfArray(id))
@@ -567,21 +586,18 @@ function removeRow(hook, parse, id) {
   getDisplayItem = Maybe(parse.show)
     .bind(getFunction("show", 0))
     .bind(getElemOfArray(id))
-  // console.log(JSON.stringify(getDisplayItem.val()))
+  
   getTable = bindAll(parse, getDisplayItem, [getFunction("table", 0), isArray])
 
   if (!getTable.isNothing()) {
-    console.log(JSON.stringify(getTable.val()))
+    
     getTable.val().forEach(function(val, i) {
       valueToDelete = Maybe(val);
-      console.log(JSON.stringify(valueToDelete.val()))
       if (!valueToDelete.isNothing()) {
-        console.log(JSON.stringify(val))
         if (val.v != undefined && val.v.f != undefined && val.v.f.arg.length == 0) {
           var valueToChange = parse[val.v.f.name].v;
           removeFromVariable(hook, valueToChange, parse);
         } else {
-          console.log(JSON.stringify(val))
           val.v.a.splice(hook - 1, 1);
         }
       }
@@ -601,7 +617,6 @@ function removeRow(hook, parse, id) {
 
 
 function removeFromVariable(hook, subParse, parse) {
-  console.log(JSON.stringify(subParse))
   if (subParse.f != undefined && subParse.f.arg.length == 0) {
     var valueToChange = parse[subParse.f.name].v;
 
@@ -612,12 +627,10 @@ function removeFromVariable(hook, subParse, parse) {
 }
 
 function addOrChangeSingleValue(hook, subParse, parse) {
-  console.log(JSON.stringify(subParse))
   if (subParse.v != undefined && subParse.v.f != undefined && subParse.v.f.arg == 0) {
     addOrChangeSingleValue(hook, parse[subParse.v.f.name], parse);
   } else {
     if (hook[2] == null) {
-      console.log(JSON.stringify(subParse))
       addSingleValue(hook, subParse)
     } else {
       if (subParse[hook[0]] != undefined) {
@@ -636,10 +649,8 @@ function addOrChangeSingleValue(hook, subParse, parse) {
 
 
 function changeVariable(hook, subParse, parse) {
-  console.log(JSON.stringify(subParse))
   if (subParse.f != undefined && subParse.f.arg.length == 0) {
     var valueToChange = parse[subParse.f.name].v;
-    console.log(JSON.stringify(valueToChange))
     changeVariable(hook, valueToChange, parse);
   } else {
     changeSingleValue(hook, subParse)
@@ -670,7 +681,6 @@ function addSingleValue(hook, subParse) {
 
 function changeSingleValue(hook, subParse) {
   var value = {}
-  console.log(JSON.stringify(subParse))
   if (hook[3] == "false" || hook[3] == "true") {
     value = changePbool(hook[3], subParse)
   } else if (hook[3] != "" && !isNaN(hook[3])) {
