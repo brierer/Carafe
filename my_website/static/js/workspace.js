@@ -589,10 +589,11 @@ function removeFromVariable(hook, subParse, parse) {
 }
 
 function addOrChangeSingleValue(hook, subParse, parse) {
+     console.log(JSON.stringify(subParse))
   if (subParse.v != undefined && subParse.v.f != undefined && subParse.v.f.arg == 0) {
     addOrChangeSingleValue(hook, parse[subParse.v.f.name], parse);
   } else {
-    if (hook[2] == null) {
+    if (hook[2] == null || hook[2] == "") {
        console.log(JSON.stringify(subParse))
       addSingleValue(hook, subParse)
     } else {
