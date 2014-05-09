@@ -284,8 +284,9 @@ function displayOneTable(parse, table, id) {
   var widthTable = Math.min(75 * table.data[0].length, 750);
 
   $('#containment-wrapper div').last().outerWidth(widthTable);
+  var tableAdd = $('#containment-wrapper div.handsontable-wrapper').last()
 
-  $('#containment-wrapper div.handsontable-wrapper').last().handsontable({
+  tableAdd.handsontable({
     data: table.data,
     colHeaders: table.p.col,
     minSpareRows: 1,
@@ -294,22 +295,20 @@ function displayOneTable(parse, table, id) {
     width: widthTable,
     cells: function(row, col, prop) {
       var cellProperties = {};
-      cellProperties.readOnly = isColReadOnly(row, col, parse, id)
+      cellProperties.readOnly = isColReadOnly(row, col, parse, id);
       return cellProperties;
     },
     afterChange: function(hooks) {
       var table = this
-
-
-
       if (hooks != null) {
         hooks.forEach(function(hook, i) {
-          for (var i = 0; i < 2; i++) {
-            if (table.getDataAtCell(i, hook[1]) == null) {
-              table.setDataAtCell(i, hook[1], "")
+          table.getDataAtCol(hook[1])
+          for(var i=0; i<hook[0]; i++) {
+            if (table.getDataAtCell(i,hook[1]) == null) {
+              table.setDataAtCell(i,hook[1], "")
             }
           }
-
+          if (!(hook[3]=="" &&  table.getDataAtCol(hook[1]).length-1==hook[0]))
           changeValue(hook, parse, id);
           if (hook[0] + 1 == table.countRows()) {
             var cells = table.getDataAtRow(hook[0]);
@@ -319,10 +318,9 @@ function displayOneTable(parse, table, id) {
               }
             })
           }
+
         })
-
       }
-
     },
     afterRemoveRow: function(hook) {
       removeRow(hook, parse, id);
@@ -527,9 +525,9 @@ function bindAll(parse, maybe, binds) {
     maybeVariable = maybe.bind(isVariable)
 
 
-  if (!maybe.isNothing()) {
-    console.log(JSON.stringify(maybe.val()));
-  }
+    if (!maybe.isNothing()) {
+     // console.log(JSON.stringify(maybe.val()));
+    }
 
     if (maybeVariable.isNothing()) {
       maybe = maybe.bind(fn);
@@ -539,10 +537,10 @@ function bindAll(parse, maybe, binds) {
     }
   })
 
- // if (maybe.bind(isSingleValue).isNothing()) {
+  // if (maybe.bind(isSingleValue).isNothing()) {
   //  return Maybe(null);
   //}
- 
+
   return maybe
 }
 
@@ -552,17 +550,37 @@ function isColReadOnly(row, col, parse, id) {
     .bind(getFunction("show", 0))
     .bind(getElemOfArray(id))
 
-  getTableCol = bindAll(parse, getDisplayItem, [getFunction("table", 0), getElemOfArray(col), getElemOfArray(row), isSingleValue])
+  getTableCol = bindAll(parse, getDisplayItem, [getFunction("table", 0),getElemOfArray(col)])
 
-  getArrayCol = bindAll(parse, getDisplayItem, [getElemOfArray(col), getElemOfArray(row), isSingleValue])
+  getArrayCol = bindAll(parse, getDisplayItem, [getElemOfArray(col)])
 
-  return getTableCol.isNothing() && getArrayCol.isNothing() // !m1.isNothing()
+  var getElemAtCol
+  if (!getTableCol.isNothing()) {
+    getElemAtCol = getTableCol
+  }else if (!getArrayCol.isNothing()) {
+    getElemAtCol = getArrayCol
+  }else {
+    return true
+  }
+
+  validArray = bindAll(parse, getElemAtCol, [isArray]);
+
+  if (!validArray.isNothing()) {
+    if (validArray.val().length-1 < row) {
+      return false
+    } else {
+      return bindAll(parse, getElemAtCol, [getElemOfArray(row) ,isSingleValue]).isNothing()
+    }
+
+  }
+
+  return true // !m1.isNothing()
 
 }
 
 
 function changeValue(hook, parse, id) {
-  
+
   getDisplayItem = Maybe(parse.show)
     .bind(getFunction("show", 0))
     .bind(getElemOfArray(id))
@@ -586,11 +604,11 @@ function removeRow(hook, parse, id) {
   getDisplayItem = Maybe(parse.show)
     .bind(getFunction("show", 0))
     .bind(getElemOfArray(id))
-  
+
   getTable = bindAll(parse, getDisplayItem, [getFunction("table", 0), isArray])
 
   if (!getTable.isNothing()) {
-    
+
     getTable.val().forEach(function(val, i) {
       valueToDelete = Maybe(val);
       if (!valueToDelete.isNothing()) {
@@ -670,7 +688,7 @@ function addSingleValue(hook, subParse) {
   var diff = hook[0] - subParse.length - 1
   while (diff >= 0) {
     var empty = createVal("", subParse, changePstring)
-    subParse.push(empty);
+  //  subParse.push(empty);
     diff--
   }
 
