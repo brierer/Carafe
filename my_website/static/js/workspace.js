@@ -287,39 +287,41 @@ function displayOneTable(parse, table, id) {
   var tableAdd = $('#containment-wrapper div.handsontable-wrapper').last()
 
   tableAdd.handsontable({
-    data: table.data,
-    colHeaders: table.p.col,
-    minSpareRows: 1,
-    contextMenu: true,
-    stretchH: 'all',
-    width: widthTable,
-    cells: function(row, col, prop) {
-      var cellProperties = {};
-      cellProperties.readOnly = isColReadOnly(row, col, parse, id);
-      return cellProperties;
-    },
-    afterChange: function(hooks) {
-      var table = this
-      if (hooks != null) {
-        hooks.forEach(function(hook, i) {
-          table.getDataAtCol(hook[1])
-          for(var i=0; i<hook[0]; i++) {
-            if (table.getDataAtCell(i,hook[1]) == null) {
-              table.setDataAtCell(i,hook[1], "")
-            }
-          }
-          if (!(hook[3]=="" &&  table.getDataAtCol(hook[1]).length-1==hook[0]))
-          changeValue(hook, parse, id);
-          if (hook[0] + 1 == table.countRows()) {
-            var cells = table.getDataAtRow(hook[0]);
-            cells.forEach(function(val, i) {
-              if (val == "") {
-                table.setDataAtCell(hook[0], i, null)
+      data: table.data,
+      colHeaders: table.p.col,
+      minSpareRows: 1,
+      contextMenu: true,
+      stretchH: 'all',
+      width: widthTable,
+      cells: function(row, col, prop) {
+        var cellProperties = {};
+        cellProperties.readOnly = isColReadOnly(row, col, parse, id);
+        return cellProperties;
+      },
+      afterChange: function(hooks) {
+        var table = this
+        if (hooks != null) {
+          hooks.forEach(function(hook, i) {
+              table.getDataAtCol(hook[1])
+              if (!(hook[3] == "" && table.getDataAtCol(hook[1]).length - 1 == hook[0])) {
+              for (var i = 0; i < hook[0]; i++) {
+                if (table.getDataAtCell(i, hook[1]) == null) {
+                  table.setDataAtCell(i, hook[1], "")
+                }
               }
-            })
-          }
 
-        })
+              changeValue(hook, parse, id);
+            }
+            if (hook[0] + 1 == table.countRows()) {
+              var cells = table.getDataAtRow(hook[0]);
+              cells.forEach(function(val, i) {
+                if (val == "") {
+                  table.setDataAtCell(hook[0], i, null)
+                }
+              })
+            }
+
+          })
       }
     },
     afterRemoveRow: function(hook) {
@@ -526,7 +528,7 @@ function bindAll(parse, maybe, binds) {
 
 
     if (!maybe.isNothing()) {
-     // console.log(JSON.stringify(maybe.val()));
+      // console.log(JSON.stringify(maybe.val()));
     }
 
     if (maybeVariable.isNothing()) {
@@ -550,26 +552,26 @@ function isColReadOnly(row, col, parse, id) {
     .bind(getFunction("show", 0))
     .bind(getElemOfArray(id))
 
-  getTableCol = bindAll(parse, getDisplayItem, [getFunction("table", 0),getElemOfArray(col)])
+  getTableCol = bindAll(parse, getDisplayItem, [getFunction("table", 0), getElemOfArray(col)])
 
   getArrayCol = bindAll(parse, getDisplayItem, [getElemOfArray(col)])
 
   var getElemAtCol
   if (!getTableCol.isNothing()) {
     getElemAtCol = getTableCol
-  }else if (!getArrayCol.isNothing()) {
+  } else if (!getArrayCol.isNothing()) {
     getElemAtCol = getArrayCol
-  }else {
+  } else {
     return true
   }
 
   validArray = bindAll(parse, getElemAtCol, [isArray]);
 
   if (!validArray.isNothing()) {
-    if (validArray.val().length-1 < row) {
+    if (validArray.val().length - 1 < row) {
       return false
     } else {
-      return bindAll(parse, getElemAtCol, [getElemOfArray(row) ,isSingleValue]).isNothing()
+      return bindAll(parse, getElemAtCol, [getElemOfArray(row), isSingleValue]).isNothing()
     }
 
   }
@@ -688,7 +690,7 @@ function addSingleValue(hook, subParse) {
   var diff = hook[0] - subParse.length - 1
   while (diff >= 0) {
     var empty = createVal("", subParse, changePstring)
-  //  subParse.push(empty);
+    //  subParse.push(empty);
     diff--
   }
 
