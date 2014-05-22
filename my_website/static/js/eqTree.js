@@ -1,19 +1,19 @@
-function stringifyEqTree(parse) {
+function stringifyEqTree(eqTree) {
 	var text = ""
-	for (var val in parse) {
-		text += stringifyEquation(parse, val);
+	for (var val in eqTree) {
+		text += stringifyEquation(eqTree, val);
 	}
 	return text
 
-	function stringifyEquation(parse, val) {
-		return val + " = " + stringifyVal(parse[val]);
+	function stringifyEquation(eqTree, val) {
+		return val + " = " + stringifyVal(eqTree[val]);
 	}
 
-	function stringifyVal(parse) {
+	function stringifyVal(eqTree) {
 		var s1, v, s2 = ""
-		s1 = parse.s1
-		s2 = parse.s2
-		var value = parse.v
+		s1 = eqTree.s1
+		s2 = eqTree.s2
+		var value = eqTree.v
 		if (value.a !== undefined) {
 			v = stringifyArray(value.a)
 		} else if (value.f !== undefined) {
@@ -81,10 +81,10 @@ function stringifyEqTree(parse) {
 
 
 function getFunction(name, i) {
-	return function(parse) {
-		if (parse.v.f !== undefined) {
-			if (parse.v.f.name == name) {
-				return parse.v.f.arg[i]
+	return function(eqTree) {
+		if (eqTree.v.f !== undefined) {
+			if (eqTree.v.f.name == name) {
+				return eqTree.v.f.arg[i]
 			} else {
 				return null
 			}
@@ -94,9 +94,9 @@ function getFunction(name, i) {
 }
 
 function getElemOfArray(i) {
-	return function(parse) {
-		if (parse.v !== undefined && parse.v.a !== undefined) {
-			return parse.v.a[i]
+	return function(eqTree) {
+		if (eqTree.v !== undefined && eqTree.v.a !== undefined) {
+			return eqTree.v.a[i]
 		}
 		return null
 	}
@@ -104,18 +104,18 @@ function getElemOfArray(i) {
 
 
 
-function isArray(parse) {
-	if (parse.v.a !== undefined) {
-		return parse.v.a;
+function isArray(eqTree) {
+	if (eqTree.v.a !== undefined) {
+		return eqTree.v.a;
 	}
 	return null;
 }
 
 
-function isVariable(parse) {
-	if (parse.v !== undefined && parse.v.f !== undefined) {
-		if (parse.v.f.arg.length == 0) {
-			return parse.v.f
+function isVariable(eqTree) {
+	if (eqTree.v !== undefined && eqTree.v.f !== undefined) {
+		if (eqTree.v.f.arg.length == 0) {
+			return eqTree.v.f
 		} else {
 			return null
 		}
@@ -124,17 +124,17 @@ function isVariable(parse) {
 }
 
 
-function isSingleValue(parse) {
+function isSingleValue(eqTree) {
 
-	if (parse.v !== undefined && parse.v.tag !== undefined) {
-		return parse.v
+	if (eqTree.v !== undefined && eqTree.v.tag !== undefined) {
+		return eqTree.v
 	}
 
 	return null
 }
 
 
-function bindAll(parse, maybe, binds) {
+function bindAll(eqTree, maybe, binds) {
 	binds.forEach(function(fn, i) {
 		maybeVariable = maybe.bind(isVariable)
 
@@ -146,7 +146,7 @@ function bindAll(parse, maybe, binds) {
 		if (maybeVariable.isNothing()) {
 			maybe = maybe.bind(fn);
 		} else {
-			maybe = Maybe(parse[maybeVariable.val().name])
+			maybe = Maybe(eqTree[maybeVariable.val().name])
 			maybe = maybe.bind(fn);
 		}
 	})
@@ -158,15 +158,15 @@ function bindAll(parse, maybe, binds) {
 	return maybe
 }
 
-function isColReadOnly(row, col, parse, id) {
+function isColReadOnly(row, col, eqTree, id) {
 
-	getDisplayItem = Maybe(parse.show)
+	getDisplayItem = Maybe(eqTree.show)
 		.bind(getFunction("show", 0))
 		.bind(getElemOfArray(id))
 
-	getTableCol = bindAll(parse, getDisplayItem, [getFunction("table", 0), getElemOfArray(col)])
+	getTableCol = bindAll(eqTree, getDisplayItem, [getFunction("table", 0), getElemOfArray(col)])
 
-	getArrayCol = bindAll(parse, getDisplayItem, [getElemOfArray(col)])
+	getArrayCol = bindAll(eqTree, getDisplayItem, [getElemOfArray(col)])
 
 	var getElemAtCol
 	if (!getTableCol.isNothing()) {
@@ -177,13 +177,13 @@ function isColReadOnly(row, col, parse, id) {
 		return true
 	}
 
-	validArray = bindAll(parse, getElemAtCol, [isArray]);
+	validArray = bindAll(eqTree, getElemAtCol, [isArray]);
 
 	if (!validArray.isNothing()) {
 		if (validArray.val().length - 1 < row) {
 			return false
 		} else {
-			return bindAll(parse, getElemAtCol, [getElemOfArray(row), isSingleValue]).isNothing()
+			return bindAll(eqTree, getElemAtCol, [getElemOfArray(row), isSingleValue]).isNothing()
 		}
 
 	}
@@ -193,32 +193,32 @@ function isColReadOnly(row, col, parse, id) {
 }
 
 
-function changeValue(hook, parse, id) {
+function changeValue(hook, eqTree, id) {
 
-	getDisplayItem = Maybe(parse.show)
+	getDisplayItem = Maybe(eqTree.show)
 		.bind(getFunction("show", 0))
 		.bind(getElemOfArray(id))
 
-	getTableCol = bindAll(parse, getDisplayItem, [getFunction("table", 0), getElemOfArray(hook.col), isArray])
+	getTableCol = bindAll(eqTree, getDisplayItem, [getFunction("table", 0), getElemOfArray(hook.col), isArray])
 
-	getArrayCol = bindAll(parse, getDisplayItem, [getElemOfArray(hook.col), isArray])
+	getArrayCol = bindAll(eqTree, getDisplayItem, [getElemOfArray(hook.col), isArray])
 	if (!getArrayCol.isNothing()) {
-		addOrChangeSingleValue(hook, getArrayCol.val(), parse)
+		addOrChangeSingleValue(hook, getArrayCol.val(), eqTree)
 	} else if (!getTableCol.isNothing()) {
-		addOrChangeSingleValue(hook, getTableCol.val(), parse)
+		addOrChangeSingleValue(hook, getTableCol.val(), eqTree)
 	}
 
 }
 
 
 
-function removeRow(row, parse, id) {
+function removeRow(row, eqTree, id) {
 
-	getDisplayItem = Maybe(parse.show)
+	getDisplayItem = Maybe(eqTree.show)
 		.bind(getFunction("show", 0))
 		.bind(getElemOfArray(id))
 
-	getTable = bindAll(parse, getDisplayItem, [getFunction("table", 0), isArray])
+	getTable = bindAll(eqTree, getDisplayItem, [getFunction("table", 0), isArray])
 
 	if (!getTable.isNothing()) {
 
@@ -226,8 +226,8 @@ function removeRow(row, parse, id) {
 			valueToDelete = Maybe(val);
 			if (!valueToDelete.isNothing()) {
 				if (val.v != undefined && val.v.f != undefined && val.v.f.arg.length == 0) {
-					var valueToChange = parse[val.v.f.name].v;
-					removeFromVariable(row, valueToChange, parse);
+					var valueToChange = eqTree[val.v.f.name].v;
+					removeFromVariable(row, valueToChange, eqTree);
 				} else {
 					val.v.a.splice(row - 1, 1);
 				}
@@ -239,29 +239,29 @@ function removeRow(row, parse, id) {
 }
 
 
-function removeFromVariable(hook, subParse, parse) {
-	if (subParse.f != undefined && subParse.f.arg.length == 0) {
-		var valueToChange = parse[subParse.f.name].v;
+function removeFromVariable(hook, subeqTree, eqTree) {
+	if (subeqTree.f != undefined && subeqTree.f.arg.length == 0) {
+		var valueToChange = eqTree[subeqTree.f.name].v;
 
-		removeFromVariable(hook, valueToChange, parse);
+		removeFromVariable(hook, valueToChange, eqTree);
 	} else {
-		subParse.a.splice(hook - 1, 1);
+		subeqTree.a.splice(hook - 1, 1);
 	}
 }
 
-function addOrChangeSingleValue(hook, subParse, parse) {
-	if (subParse.v != undefined && subParse.v.f != undefined && subParse.v.f.arg == 0) {
-		addOrChangeSingleValue(hook, parse[subParse.v.f.name], parse);
+function addOrChangeSingleValue(hook, subeqTree, eqTree) {
+	if (subeqTree.v != undefined && subeqTree.v.f != undefined && subeqTree.v.f.arg == 0) {
+		addOrChangeSingleValue(hook, eqTree[subeqTree.v.f.name], eqTree);
 	} else {
 		if (hook[2] == null) {
-			addSingleValue(hook, subParse)
+			addSingleValue(hook, subeqTree)
 		} else {
-			if (subParse[hook.row] != undefined) {
-				if (subParse[hook.row].v != undefined && subParse[hook.row].v.f != undefined && subParse[hook.row].v.f.arg.length == 0) {
-					var valueToChange = parse[subParse[hook[0]].v.f.name].v;
-					changeVariable(hook.new, valueToChange, parse);
+			if (subeqTree[hook.row] != undefined) {
+				if (subeqTree[hook.row].v != undefined && subeqTree[hook.row].v.f != undefined && subeqTree[hook.row].v.f.arg.length == 0) {
+					var valueToChange = eqTree[subeqTree[hook[0]].v.f.name].v;
+					changeVariable(hook.new, valueToChange, eqTree);
 				} else {
-					var valueToChange = subParse[hook[0]].v
+					var valueToChange = subeqTree[hook[0]].v
 					changeSingleValue(hook.new, valueToChange)
 				}
 			}
@@ -271,68 +271,68 @@ function addOrChangeSingleValue(hook, subParse, parse) {
 
 
 
-function changeVariable(value, subParse, parse) {
-	if (subParse.f != undefined && subParse.f.arg.length == 0) {
-		var valueToChange = parse[subParse.f.name].v;
-		changeVariable(value, valueToChange, parse);
+function changeVariable(value, subeqTree, eqTree) {
+	if (subeqTree.f != undefined && subeqTree.f.arg.length == 0) {
+		var valueToChange = eqTree[subeqTree.f.name].v;
+		changeVariable(value, valueToChange, eqTree);
 	} else {
-		changeSingleValue(value, subParse)
+		changeSingleValue(value, subeqTree)
 	}
 }
 
-function addSingleValue(hook, subParse) {
+function addSingleValue(hook, subeqTree) {
 	var value = {}
 	if (hook.new == "false" || hook.new == "true") {
-		value = createVal(hook.new, subParse, changePbool)
+		value = createVal(hook.new, subeqTree, changePbool)
 	} else if (hook.new != "" && !isNaN(hook.new)) {
-		value = createVal(hook.new, subParse, changePnum)
+		value = createVal(hook.new, subeqTree, changePnum)
 	} else {
-		value = createVal(hook.new, subParse, changePstring)
+		value = createVal(hook.new, subeqTree, changePstring)
 	}
 
-	var diff = hook.row - subParse.length - 1
+	var diff = hook.row - subeqTree.length - 1
 	while (diff >= 0) {
-		var empty = createVal("", subParse, changePstring)
-			//  subParse.push(empty);
+		var empty = createVal("", subeqTree, changePstring)
+			//  subeqTree.push(empty);
 		diff--
 	}
 
-	subParse.push(value);
+	subeqTree.push(value);
 }
 
 
 
-function changeSingleValue(newValue, subParse) {
+function changeSingleValue(newValue, subeqTree) {
 	var value = {}
 	if (newValue == "false" || newValue == "true") {
-		value = changePbool(newValue, subParse)
+		value = changePbool(newValue, subeqTree)
 	} else if (newValue != "" && !isNaN(newValue)) {
-		value = changePnum(newValue, subParse);
+		value = changePnum(newValue, subeqTree);
 	} else {
-		value = changePstring(newValue, subParse);
+		value = changePstring(newValue, subeqTree);
 	}
 }
 
-function changePbool(value, subParse) {
-	subParse.tag = 'Pbool'
+function changePbool(value, subeqTree) {
+	subeqTree.tag = 'Pbool'
 	if (value == "false")
-		subParse.contents = false
+		subeqTree.contents = false
 	else {
-		subParse.contents = true
+		subeqTree.contents = true
 	};
 }
 
-function changePstring(value, subParse) {
-	subParse.tag = 'Pstring'
-	subParse.contents = value
+function changePstring(value, subeqTree) {
+	subeqTree.tag = 'Pstring'
+	subeqTree.contents = value
 }
 
-function changePnum(value, subParse) {
-	subParse.tag = 'Pnum'
-	subParse.contents = Number(value)
+function changePnum(value, subeqTree) {
+	subeqTree.tag = 'Pnum'
+	subeqTree.contents = Number(value)
 }
 
-function createVal(hook, subParse, fn) {
+function createVal(hook, subeqTree, fn) {
 	var value = {}
 	value.v = {};
 	fn(hook, value.v)
@@ -343,7 +343,7 @@ function createVal(hook, subParse, fn) {
 
 
 function addFunctionTable(name) {
-	maybe(parseJSON).bind()
+	maybe(eqTreeJSON).bind()
 }
 
 function addTable(param) {
@@ -354,7 +354,7 @@ function addTable(param) {
 		arr.push(null);
 	}
 	for (var a = []; a.length < 1; a.push(arr.slice(0)));
-	displayOneTable(parseJSON, validateTableWithArray(a), id)
+	displayOneTable(eqTreeJSON, validateTableWithArray(a), id)
 }
 
 
