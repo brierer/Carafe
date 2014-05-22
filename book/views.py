@@ -54,14 +54,16 @@ def get_calc_result(request):
 		return HttpResponse(json.dumps(resultat), content_type="application/json")
 
 def get_book(request, book_id):
+	print time.time()
 	book = get_book_by_Id(book_id)
 	formulas =	book.formulas
-	print formulas[0]	
+	#print formulas[0]	
 	time_calc = time.time()
 	key = generate_calc_key(request,time_calc) 
 	resultat = initCalc(key, formulas)
 	form = FormulasForm()  #
 	form.setKey(book_id, time_calc)
+	print time.time()
 	return render(request, 'book/workspace.html', locals())  
 
 def watch_book(request,book_id):

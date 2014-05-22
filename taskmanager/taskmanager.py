@@ -9,7 +9,7 @@ from collections import OrderedDict
 class Receiver:
     class __OnlyOne:
         def __init__(self):
-        	self.redis   = redis.StrictRedis(host='localhost', port=6379, db=0)
+        	self.redis   = redis.StrictRedis(host='127.0.0.1', port=6379, db=0)
        
 
     	def receive(self, name):
@@ -66,18 +66,23 @@ class Sender:
       
 
 def initCalc(key, formulas):
-    print formulas
+    print "Debut:"
+    print int(round(time.time() * 1000))
+    #print formulas
     Receiver().clear(key)
     sender = Sender().sendMessage(key+";"+formulas)
-    print " [x] Sent " + key
+    #print " [x] Sent " + key
     return None 
 
 def getResult(key, id):
+    print int(round(time.time() * 1000))
     print " [x] Get  " + key
     result = Receiver().getLastMessageFrom(key)
     if (result == ""):
         return None
     convertJSON = json.loads(result,object_pairs_hook=OrderedDict) 
-    print result  
+    #print result
+    print "Fin:"
+    print int(round(time.time() * 1000))
     return convertJSON
 
