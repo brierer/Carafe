@@ -164,25 +164,22 @@ function manySearch(eqTree, maybe, binds) {
 	return maybe
 }
 
+
+function getTableOrArrayCol(eqObj, col, displayItem) {
+	getTableCol = manySearch(eqObj, displayItem, [getFunction("table", 0), getElemOfArray(col)])
+	getArrayCol = manySearch(eqObj, displayItem, [getElemOfArray(col)])
+	return Maybe.orSecond(getArrayCol, getTableCol)
+}
+
 function isColReadOnly(row, col, eqObj, id) {
 
-	getDisplayItem = Maybe(eqObj.show)
-		.bind(getFunction("show", 0))
-		.bind(getElemOfArray(id))
+	displayItem = getDisplayItem_(eqObj, id)
 
-	getTableCol = manySearch(eqObj, getDisplayItem, [getFunction("table", 0), getElemOfArray(col)])
 
-	getArrayCol = manySearch(eqObj, getDisplayItem, [getElemOfArray(col)])
-
-	var getElemAtCol
-	if (!getTableCol.isNothing()) {
-		getElemAtCol = getTableCol
-	} else if (!getArrayCol.isNothing()) {
-		getElemAtCol = getArrayCol
-	} else {
+	var getElemAtCol = getTableOrArrayCol(eqObj, col, displayItem)
+	if (getElemAtCol.isNothing()) {
 		return true
 	}
-
 	validArray = manySearch(eqObj, getElemAtCol, [isArray]);
 
 	if (!validArray.isNothing()) {
@@ -200,22 +197,11 @@ function isColReadOnly(row, col, eqObj, id) {
 
 
 function changeValue(hook, eqObj, id) {
-
-	displayItem = Maybe(eqObj.show)
-		.bind(getFunction("show", 0))
-		.bind(getElemOfArray(id))
-
-	getTableCol = manySearch(eqObj, displayItem, [getFunction("table", 0), getElemOfArray(hook.col), isArray])
-
-	getArrayCol = manySearch(eqObj, displayItem, [getElemOfArray(hook.col), isArray])
-	if (!getArrayCol.isNothing()) {
-		addOrChangeSingleValue(hook, getArrayCol.val(), eqObj)
-	} else if (!getTableCol.isNothing()) {
-		addOrChangeSingleValue(hook, getTableCol.val(), eqObj)
-	}
-
+	var displayItem = getDisplayItem_(eqObj, id)
+	var getTableCol = manySearch(eqObj, displayItem, [getFunction("table", 0), getElemOfArray(hook.col), isArray])
+	var getArrayCol = manySearch(eqObj, displayItem, [getElemOfArray(hook.col), isArray])
+	addOrChangeSingleValue(hook, Maybe.orSecond(getTableCol, getArrayCol).val(), eqObj)
 }
-
 
 
 function getDisplayItem_(eqObj, id) {
@@ -227,21 +213,13 @@ function getDisplayItem_(eqObj, id) {
 function isTableOrArray(eqObj, item) {
 	getTableCol = manySearch(eqObj, item, [getFunction("table", 0), isArray])
 	getArrayCol = manySearch(eqObj, item, [isArray])
-	if (!getArrayCol.isNothing()) {
-		return getArrayCol
-	} else if (!getTableCol.isNothing()) {
-		return getTableCol
-	}
-
+	return Maybe.orSecond(getTableCol, getArrayCol)
 }
 
 function removeRow(row, eqObj, id) {
-
 	displayItem = getDisplayItem_(eqObj, id)
 	data = isTableOrArray(eqObj, displayItem)
-
 	if (!data.isNothing()) {
-
 		data.val().forEach(function(val, i) {
 			valueToDelete = Maybe(val);
 			if (!valueToDelete.isNothing()) {
@@ -253,16 +231,13 @@ function removeRow(row, eqObj, id) {
 				}
 			}
 		})
-
 	}
-
 }
 
 
 function removeFromVariable(hook, subeqObj, eqObj) {
 	if (subeqObj.f != undefined && subeqObj.f.arg.length == 0) {
 		var valueToChange = eqObj[subeqObj.f.name].v;
-
 		removeFromVariable(hook, valueToChange, eqObj);
 	} else {
 		subeqObj.a.splice(hook - 1, 1);
@@ -270,15 +245,14 @@ function removeFromVariable(hook, subeqObj, eqObj) {
 }
 
 function addOrChangeSingleValue(hook, subeqObj, eqObj) {
-	
-	if (subeqObj.v != undefined && subeqObj.v.f != undefined && subeqObj.v.f.arg == 0) {
+	if (isVariable(subeqObj)) {
 		addOrChangeSingleValue(hook, eqObj[subeqObj.v.f.name], eqObj);
 	} else {
 		if (hook.old == null) {
 			addSingleValue(hook, subeqObj)
 		} else {
 			if (subeqObj[hook.row] != undefined) {
-				if (subeqObj[hook.row].v != undefined && subeqObj[hook.row].v.f != undefined && subeqObj[hook.row].v.f.arg.length == 0) {
+				if (isVariable(subeqObj[hook.row])) {
 					var valueToChange = eqObj[subeqObj[hook.row].v.f.name].v;
 					changeVariable(hook.new, valueToChange, eqObj);
 				} else {
@@ -421,3 +395,11 @@ Maybe = function(value) {
 
 	return Something(value);
 };
+
+Maybe.orSecond = function(m1, m2) {
+	if (m1.isNothing()) {
+		return m2;
+	} else {
+		return m1;
+	}
+}
