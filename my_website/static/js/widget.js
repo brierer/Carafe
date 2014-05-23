@@ -71,7 +71,7 @@ function displayChart(chart) {
 
 function displayData(data) {
   if (data.parse !== undefined) {
-    stringifyEqTree(data.parse);
+    updateEditorText()    
     if (data.eval.statut == "ok") {
       displayResult(data.parse, data.eval.res);
     } else if (data.statut == 'tko') {
@@ -170,7 +170,7 @@ function displayOneTable(parse, table, id) {
             }
 
             changeValue({'row':hook[0],'col':hook[1],'old':hook[2], 'new':hook[3]}, parse, id);
-            changeEditorText(stringifyEqTree(parse))
+            updateEditorText()
           }
           if (hook[0] + 1 == table.countRows()) {
             var cells = table.getDataAtRow(hook[0]);
@@ -187,15 +187,15 @@ function displayOneTable(parse, table, id) {
     afterRemoveRow: function(hook) {
       var rowToDelete = hook >= this.countRows() ? hook : hook + 1
       removeRow(rowToDelete, parse, id);
-      changeEditorText(stringifyEqTree(parse))
+      updateEditorText()
     }
 
   });
 
 };
 
-function changeEditorText(text) {
-  editor.getDoc().setValue(text);
+function updateEditorText() {
+  editor.getDoc().setValue(eqWrapper.toStr());
   editor.save();
 }
 

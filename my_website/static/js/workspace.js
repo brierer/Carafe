@@ -14,10 +14,10 @@ $.fn.serializeObject = function() {
   return o;
 };
 
+var eqWrapper = EqWrapper();
+var editor;
 
 $(function() {
-  var parseJSON;
-  var editor;
   initComposent();
   initPollingGetCalcResult();  
 })

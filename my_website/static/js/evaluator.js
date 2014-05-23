@@ -30,7 +30,7 @@ function pollingServerCalcGetResult(nbTry) {
 			var timesRun = nbTry;
 			console.log('Action ' + (timesRun + 1) + ' started ' + (now - startTime) + 'ms after script start');
 			if (data != null) {
-				parseJSON = data.parse
+				eqWrapper.setEQ(data.parse)
 				displayData(data);
 				isCalculatingWaiting = false;
 			} else {
