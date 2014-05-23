@@ -1,95 +1,98 @@
 function EqWrapper() {
-	var eq = null
+	var eqObj = null
 
 	return {
 		toStr: function() {
-			return stringifyEqObj(this.eqObj)
+			return stringifyEqObj()
 		},
 		setEQ: function(eq) {
-			this.eqObj = eq;
-		}
-	}
-	function stringifyEqObj(eqObj) {
-	var text = ""
-	for (var val in eqObj) {
-		text += stringifyEquation(eqObj, val);
-	}
-	return text
-
-	function stringifyEquation(eqObj, val) {
-		return val + " = " + stringifyVal(eqObj[val]);
+			eqObj = eq;
+		},
+		isColReadOnly: isColReadOnly
 	}
 
-	function stringifyVal(subTree) {
-		var s1, v, s2 = ""
-		s1 = subTree.s1
-		s2 = subTree.s2
-		var value = subTree.v
-		if (value.a !== undefined) {
-			v = stringifyArray(value.a)
-		} else if (value.f !== undefined) {
-			v = stringifyFunction(value.f)
-		} else if (value.o !== undefined) {
-			v = stringifyObj(value.o)
-		} else {
-			v = stringifySingleValue(value.tag, value.contents);
-		}
-		return s1 + v + s2
-	}
 
-	function stringifyArray(contents) {
+
+	function stringifyEqObj() {
 		var text = ""
-		contents.forEach(function(val, i) {
-			if (i != 0) {
-				text += ','
+		for (var val in eqObj) {
+			text += stringifyEquation(val);
+		}
+		return text
+
+		function stringifyEquation(val) {
+			return val + " = " + stringifyVal(eqObj[val]);
+		}
+
+		function stringifyVal(subTree) {
+			var s1, v, s2 = ""
+			s1 = subTree.s1
+			s2 = subTree.s2
+			var value = subTree.v
+			if (value.a !== undefined) {
+				v = stringifyArray(value.a)
+			} else if (value.f !== undefined) {
+				v = stringifyFunction(value.f)
+			} else if (value.o !== undefined) {
+				v = stringifyObj(value.o)
+			} else {
+				v = stringifySingleValue(value.tag, value.contents);
 			}
-			text += stringifyVal(val);;
-		})
+			return s1 + v + s2
+		}
 
-		return "[" + text + "]";
-	}
-
-
-	function stringifyFunction(f) {
-
-		if (f.arg.length == 0) {
-			return f.name;
-		} else {
-			var text = f.name + "("
-			var values = f.arg
-			values.forEach(function(val, i) {
+		function stringifyArray(contents) {
+			var text = ""
+			contents.forEach(function(val, i) {
 				if (i != 0) {
 					text += ','
 				}
 				text += stringifyVal(val);;
 			})
-			return text + ")";
-		}
-	}
 
-	function stringifyObj(contents) {
-		var text = ""
-		contents.forEach(function(content, i) {
-			if (i != 0) {
-				text += ','
+			return "[" + text + "]";
+		}
+
+
+		function stringifyFunction(f) {
+
+			if (f.arg.length == 0) {
+				return f.name;
+			} else {
+				var text = f.name + "("
+				var values = f.arg
+				values.forEach(function(val, i) {
+					if (i != 0) {
+						text += ','
+					}
+					text += stringifyVal(val);;
+				})
+				return text + ")";
 			}
-			tag = content[0];
-			value = stringifyVal(content[1]);
-			text += tag + ':' + value
-		});
-		return "{" + text + "}";
-	}
+		}
 
-	function stringifySingleValue(tag, contents) {
-		if (tag == "Pstring") {
-			return "\"" + contents + "\""
-		} else {
-			return contents
+		function stringifyObj(contents) {
+			var text = ""
+			contents.forEach(function(content, i) {
+				if (i != 0) {
+					text += ','
+				}
+				tag = content[0];
+				value = stringifyVal(content[1]);
+				text += tag + ':' + value
+			});
+			return "{" + text + "}";
+		}
+
+		function stringifySingleValue(tag, contents) {
+			if (tag == "Pstring") {
+				return "\"" + contents + "\""
+			} else {
+				return contents
+			}
 		}
 	}
-}
 };
-
 
 
 
@@ -198,13 +201,13 @@ function isColReadOnly(row, col, eqObj, id) {
 
 function changeValue(hook, eqObj, id) {
 
-	getDisplayItem = Maybe(eqObj.show)
+	displayItem = Maybe(eqObj.show)
 		.bind(getFunction("show", 0))
 		.bind(getElemOfArray(id))
 
-	getTableCol = manySearch(eqObj, getDisplayItem, [getFunction("table", 0), getElemOfArray(hook.col), isArray])
+	getTableCol = manySearch(eqObj, displayItem, [getFunction("table", 0), getElemOfArray(hook.col), isArray])
 
-	getArrayCol = manySearch(eqObj, getDisplayItem, [getElemOfArray(hook.col), isArray])
+	getArrayCol = manySearch(eqObj, displayItem, [getElemOfArray(hook.col), isArray])
 	if (!getArrayCol.isNothing()) {
 		addOrChangeSingleValue(hook, getArrayCol.val(), eqObj)
 	} else if (!getTableCol.isNothing()) {
@@ -215,17 +218,31 @@ function changeValue(hook, eqObj, id) {
 
 
 
-function removeRow(row, eqObj, id) {
-
-	getDisplayItem = Maybe(eqObj.show)
+function getDisplayItem_(eqObj, id) {
+	return Maybe(eqObj.show)
 		.bind(getFunction("show", 0))
 		.bind(getElemOfArray(id))
+}
 
-	getTable = manySearch(eqObj, getDisplayItem, [getFunction("table", 0), isArray])
+function isTableOrArray(eqObj, item) {
+	getTableCol = manySearch(eqObj, item, [getFunction("table", 0), isArray])
+	getArrayCol = manySearch(eqObj, item, [isArray])
+	if (!getArrayCol.isNothing()) {
+		return getArrayCol
+	} else if (!getTableCol.isNothing()) {
+		return getTableCol
+	}
 
-	if (!getTable.isNothing()) {
+}
 
-		getTable.val().forEach(function(val, i) {
+function removeRow(row, eqObj, id) {
+
+	displayItem = getDisplayItem_(eqObj, id)
+	data = isTableOrArray(eqObj, displayItem)
+
+	if (!data.isNothing()) {
+
+		data.val().forEach(function(val, i) {
 			valueToDelete = Maybe(val);
 			if (!valueToDelete.isNothing()) {
 				if (val.v != undefined && val.v.f != undefined && val.v.f.arg.length == 0) {
@@ -253,18 +270,19 @@ function removeFromVariable(hook, subeqObj, eqObj) {
 }
 
 function addOrChangeSingleValue(hook, subeqObj, eqObj) {
+	
 	if (subeqObj.v != undefined && subeqObj.v.f != undefined && subeqObj.v.f.arg == 0) {
 		addOrChangeSingleValue(hook, eqObj[subeqObj.v.f.name], eqObj);
 	} else {
-		if (hook[2] == null) {
+		if (hook.old == null) {
 			addSingleValue(hook, subeqObj)
 		} else {
 			if (subeqObj[hook.row] != undefined) {
 				if (subeqObj[hook.row].v != undefined && subeqObj[hook.row].v.f != undefined && subeqObj[hook.row].v.f.arg.length == 0) {
-					var valueToChange = eqObj[subeqObj[hook[0]].v.f.name].v;
+					var valueToChange = eqObj[subeqObj[hook.row].v.f.name].v;
 					changeVariable(hook.new, valueToChange, eqObj);
 				} else {
-					var valueToChange = subeqObj[hook[0]].v
+					var valueToChange = subeqObj[hook.row].v
 					changeSingleValue(hook.new, valueToChange)
 				}
 			}

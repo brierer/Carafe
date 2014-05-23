@@ -1,4 +1,3 @@
-
 function validateChartParameter(p) {
   if (p.title == undefined)
     (p.title = "")
@@ -71,7 +70,7 @@ function displayChart(chart) {
 
 function displayData(data) {
   if (data.parse !== undefined) {
-    updateEditorText()    
+    updateEditorText()
     if (data.eval.statut == "ok") {
       displayResult(data.parse, data.eval.res);
     } else if (data.statut == 'tko') {
@@ -161,31 +160,39 @@ function displayOneTable(parse, table, id) {
       if (hooks != null) {
         hooks.forEach(function(hook, i) {
           table.getDataAtCol(hook[1])
-         
+
+
           if (!(hook[3] == null || hook[3] == "" && table.getDataAtCol(hook[1]).length - 1 == hook[0])) {
             for (var i = 0; i < hook[0]; i++) {
-              if (table.getDataAtCell(i, hook[1]) == null) {
+              if (table.getDataAtCell(i, hook[1]) == null && i < table.countRows() - 1) {
+                alert(table.countRows() - 1 + " : " + i)
                 table.setDataAtCell(i, hook[1], "")
               }
             }
 
-            changeValue({'row':hook[0],'col':hook[1],'old':hook[2], 'new':hook[3]}, parse, id);
+            changeValue({
+              'row': hook[0],
+              'col': hook[1],
+              'old': hook[2],
+              'new': hook[3]
+            }, parse, id);
             updateEditorText()
           }
-          if (hook[0] + 1 == table.countRows()) {
-            var cells = table.getDataAtRow(hook[0]);
-            cells.forEach(function(val, i) {
-              if (val == "") {
-                table.setDataAtCell(hook[0], i, null)
-              }
-            })
-          }
+          var cells = table.getDataAtRow(table.countRows() - 1);
+          cells.forEach(function(val, i) {
+            if (val == "") {
+              table.setDataAtCell(table.countRows() - 1, i, null)
+            }
+          })
 
         })
       }
     },
     afterRemoveRow: function(hook) {
-      var rowToDelete = hook >= this.countRows() ? hook : hook + 1
+
+      var gt = hook >= this.countRows()
+
+      var rowToDelete = gt ? hook : hook
       removeRow(rowToDelete, parse, id);
       updateEditorText()
     }
@@ -265,7 +272,3 @@ function setIconTable() {
   });
 
 }
-
-
-
-
