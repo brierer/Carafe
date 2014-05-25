@@ -272,3 +272,18 @@ function setIconTable() {
   });
 
 }
+
+function addTable(param) {
+  var id = $(".table-container").length + 1
+  var nbCol = Number(param["nb-col"])
+  var arr = [];
+  for (var i = 0; i < nbCol; ++i) {
+    arr.push(null);
+  }
+  for (var a = []; a.length < 1; a.push(arr.slice(0)));
+
+  var f = createFunction("table", {})
+  alert(f)
+  addEq(param["table-name"], f)
+  displayOneTable(eqWrapper.getEQ(), validateTableWithArray(a), id)
+}

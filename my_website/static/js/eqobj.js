@@ -8,6 +8,9 @@ function EqWrapper() {
 		setEQ: function(eq) {
 			eqObj = eq;
 		},
+		getEQ: function() {
+			return eqObj;
+		},
 		isColReadOnly: isColReadOnly
 	}
 
@@ -15,13 +18,13 @@ function EqWrapper() {
 
 	function stringifyEqObj() {
 		var text = ""
-		for (var val in eqObj) {
-			text += stringifyEquation(val);
+		for (var eq in eqObj) {
+			text += stringifyEquation(eqObj[eq]);
 		}
 		return text
 
-		function stringifyEquation(val) {
-			return val + " = " + stringifyVal(eqObj[val]);
+		function stringifyEquation(eq) {
+			return eq[0] + " = " + stringifyVal(eq[1]);
 		}
 
 		function stringifyVal(subTree) {
@@ -95,6 +98,15 @@ function EqWrapper() {
 };
 
 
+function findEQ(name) {
+	var eq = eqWrapper.getEQ();
+	for (var i = 0; i < eq.length; i++) {
+		if (eq[i][0] == name) {
+			return eq[i][1]
+		}
+	}
+}
+
 
 function getFunction(name, i) {
 	return function(eqObj) {
@@ -156,7 +168,7 @@ function manySearch(eqTree, maybe, binds) {
 		if (maybeVariable.isNothing()) {
 			maybe = maybe.bind(fn);
 		} else {
-			maybe = Maybe(eqTree[maybeVariable.val().name])
+			maybe = Maybe(findEQ(maybeVariable.val().name))
 			maybe = maybe.bind(fn);
 		}
 	})
@@ -205,7 +217,7 @@ function changeValue(hook, eqObj, id) {
 
 
 function getDisplayItem_(eqObj, id) {
-	return Maybe(eqObj.show)
+	return Maybe(eqObj[0][1])
 		.bind(getFunction("show", 0))
 		.bind(getElemOfArray(id))
 }
@@ -224,7 +236,7 @@ function removeRow(row, eqObj, id) {
 			valueToDelete = Maybe(val);
 			if (!valueToDelete.isNothing()) {
 				if (val.v != undefined && val.v.f != undefined && val.v.f.arg.length == 0) {
-					var valueToChange = eqObj[val.v.f.name].v;
+					var valueToChange = findEQ(val.v.f.name).v;
 					removeFromVariable(row, valueToChange, eqObj);
 				} else {
 					val.v.a.splice(row - 1, 1);
@@ -237,7 +249,7 @@ function removeRow(row, eqObj, id) {
 
 function removeFromVariable(hook, subeqObj, eqObj) {
 	if (subeqObj.f != undefined && subeqObj.f.arg.length == 0) {
-		var valueToChange = eqObj[subeqObj.f.name].v;
+		var valueToChange = findEQ(subeqObj.f.name).v;
 		removeFromVariable(hook, valueToChange, eqObj);
 	} else {
 		subeqObj.a.splice(hook - 1, 1);
@@ -246,14 +258,14 @@ function removeFromVariable(hook, subeqObj, eqObj) {
 
 function addOrChangeSingleValue(hook, subeqObj, eqObj) {
 	if (isVariable(subeqObj)) {
-		addOrChangeSingleValue(hook, eqObj[subeqObj.v.f.name], eqObj);
+		addOrChangeSingleValue(hook, findEQ(subeqObj.v.f.name), eqObj);
 	} else {
 		if (hook.old == null) {
 			addSingleValue(hook, subeqObj)
 		} else {
 			if (subeqObj[hook.row] != undefined) {
 				if (isVariable(subeqObj[hook.row])) {
-					var valueToChange = eqObj[subeqObj[hook.row].v.f.name].v;
+					var valueToChange = findEQ(subeqObj[hook.row].v.f.name).v;
 					changeVariable(hook.new, valueToChange, eqObj);
 				} else {
 					var valueToChange = subeqObj[hook.row].v
@@ -268,7 +280,7 @@ function addOrChangeSingleValue(hook, subeqObj, eqObj) {
 
 function changeVariable(value, subeqObj, eqObj) {
 	if (subeqObj.f != undefined && subeqObj.f.arg.length == 0) {
-		var valueToChange = eqObj[subeqObj.f.name].v;
+		var valueToChange = findEQ(subeqObj.f.name).v;
 		changeVariable(value, valueToChange, eqObj);
 	} else {
 		changeSingleValue(value, subeqObj)
@@ -337,19 +349,24 @@ function createVal(hook, subeqObj, fn) {
 }
 
 
-function addFunctionTable(name) {
-	maybe(eqObjJSON).bind()
+function addEq(name, value) {
+	eqs = eqWrapper.getEQ();
+	Object.keys(eqs)[Object.keys(eqs).length - 1].s2 = "\nasdfdsf"
+	alert(JSON.stringify(Object.keys(eqs)[Object.keys(eqs).length - 1]))
+	eqs[name] = value
+	alert(eqWrapper.toStr())
 }
 
-function addTable(param) {
-	var id = $(".table-container").length + 1
-	var nbCol = Number(param["nb-col"])
-	var arr = [];
-	for (var i = 0; i < nbCol; ++i) {
-		arr.push(null);
+
+function createFunction(name, args) {
+	var f = {}
+	f.name = name
+	f.arg = args
+	return {
+		s1: "",
+		v: f,
+		s2: ""
 	}
-	for (var a = []; a.length < 1; a.push(arr.slice(0)));
-	displayOneTable(eqObjJSON, validateTableWithArray(a), id)
 }
 
 
