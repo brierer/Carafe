@@ -124,7 +124,7 @@
 <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
-         <form method=post action="{% url "book.views.createBook" %}">
+         <form method=post action="{% url "book.views.create_book" %}">
     {% csrf_token %}
       <div class="modal-body form-group" >
         <label for="id_title">Title:</label> <input class="form-control" id="id_title" type="text" name="title" maxlength="100" placeholder="Enter Title">

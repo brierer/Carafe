@@ -93,7 +93,7 @@ function initComposent() {
     insertAtCursor($(this).attr('title'));
   });
 
-  $("#btn_eval").click(
+  $(".btn_eval").click(
     function() {
       eqEvaluation();
     });

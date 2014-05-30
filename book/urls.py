@@ -7,7 +7,7 @@ from django.conf.urls import patterns, include, url
 
 urlpatterns = patterns('book.views',
 	url(r'^(\d)', 'get_book'),
-	url(r'^watch/(\d)', 'watch_book'),
+	url(r'^watch/(\d)^', 'watch_book'),
 	url(r'^books', 'create_book'),
 	url(r'^postCalcResult', 'post_calc_result'),
 	url(r'^getCalcResult/$', 'get_calc_result'),

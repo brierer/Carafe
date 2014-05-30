@@ -54,6 +54,8 @@ def get_calc_result(request):
 		return HttpResponse(json.dumps(resultat), content_type="application/json")
 
 def get_book(request, book_id):
+	print "HEYHEYEHEYEHEYEHEYEHEY"
+	print book_id
 	print time.time()
 	book = get_book_by_Id(book_id)
 	formulas =	book.formulas

@@ -145,7 +145,7 @@ function displayOneTable(parse, table, id) {
 
   tableAdd.handsontable({
     data: table.data,
-    colHeaders: table.p.col,
+    colHeaders: table.p.col == null ? true : table.p.col,
     minSpareRows: 1,
     contextMenu: true,
     stretchH: 'all',
@@ -274,7 +274,7 @@ function setIconTable() {
 }
 
 function addTable(param) {
-  var id = $(".table-container").length + 1
+  var id = $(".table-container").length
   var nbCol = Number(param["nb-col"])
   var arr = [];
   for (var i = 0; i < nbCol; ++i) {
@@ -282,8 +282,9 @@ function addTable(param) {
   }
   for (var a = []; a.length < 1; a.push(arr.slice(0)));
 
-  var f = createFunction("table", {})
-  alert(f)
-  addEq(param["table-name"], f)
+  var f = createFunction("table", [createMatrix(nbCol, 0), createObject()])
+  addShow(addEq(param["table-name"], f))
+  updateEditorText()
   displayOneTable(eqWrapper.getEQ(), validateTableWithArray(a), id)
+  setWidget();
 }

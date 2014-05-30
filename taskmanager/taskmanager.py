@@ -4,12 +4,15 @@ import simplejson as json
 import redis
 import pika
 import time
+import os
+import urlparse
 from collections import OrderedDict
 
 class Receiver:
     class __OnlyOne:
         def __init__(self):
-        	self.redis   = redis.StrictRedis(host='127.0.0.1', port=6379, db=0)
+        	#self.redis   = redis.StrictRedis(host='localhost' ) 
+            self.redis = redis.StrictRedis(host='pub-redis-14381.us-east-1-3.1.ec2.garantiadata.com', port=14381, db=0 , password="0UbTImi5I9qQ9ebQ" )
        
 
     	def receive(self, name):
@@ -41,22 +44,28 @@ class Receiver:
 
 class Sender:
     class __OnlyOne:
+  
         def __init__(self):
-        	connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
-        	self.channel = connection.channel()
-        	print '\033[1;32m[RMQ]  Ready\033[1;m'
+            url_str = os.environ.get('tiger.cloudamqp.com', 'amqp://vidvjemc:27f27zSadNC1KCEfEJoSrsSDP80Vbtrn@tiger.cloudamqp.com/vidvjemc')
+            print url_str
+            url = urlparse.urlparse(url_str)
+           #params = pika.ConnectionParameters(host="lean-fiver-20.bigwig.lshift.net", port = 11022, virtual_host="vndrShegf7N4",credentials=pika.PlainCredentials("5mPGLSH5", "-JSed3pUDdfCEUR9i-Bz1dXwZTtb7iGA"))
+            params = pika.ConnectionParameters(host='107.170.167.54')
+            connection = pika.BlockingConnection(parameters = params)
+            self.channel = connection.channel()
+            print '\033[1;32m[RMQ]  Ready\033[1;m'
     	def send(self, message):
 		self.channel.basic_publish(exchange='',
 		          routing_key='queue',
 		          body=message)
-	
-		
-
+      
     instance = None	
     def sendMessage(self, message):
     	if not Sender.instance:
-        	Sender.instance = Sender.__OnlyOne()
-        	Sender.instance.send(message)
+            Sender.instance = Sender.__OnlyOne()
+            if Sender.instance.is_close():
+                Sender.instance.connect()    
+            Sender.instance.send(message)
         else:
         	Sender.instance.send(message)	
 

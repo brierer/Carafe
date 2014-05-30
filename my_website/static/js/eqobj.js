@@ -350,25 +350,71 @@ function createVal(hook, subeqObj, fn) {
 
 
 function addEq(name, value) {
+	alert(JSON.stringify(value))
 	eqs = eqWrapper.getEQ();
-	Object.keys(eqs)[Object.keys(eqs).length - 1].s2 = "\nasdfdsf"
-	alert(JSON.stringify(Object.keys(eqs)[Object.keys(eqs).length - 1]))
-	eqs[name] = value
-	alert(eqWrapper.toStr())
+	eqs[eqs.length - 1][1].s2 = "\n";
+	eqs.push([name, value])
+	return name
 }
 
 
 function createFunction(name, args) {
+	var v = {}
 	var f = {}
-	f.name = name
-	f.arg = args
-	return {
+	f = {
+		f: {
+			name: name,
+			arg: args
+		}
+	}
+	v = {
 		s1: "",
 		v: f,
 		s2: ""
 	}
+	return v
 }
 
+function createMatrix(col, row) {
+	var arr = []
+	for (var i = 0; i < col; i++) {
+		arr.push(createArray(row));
+	}
+	var v = {
+		a: arr
+	}
+	return {
+		s1: "",
+		v: v,
+		s2: ""
+	}
+}
+
+function createArray(nb) {
+	var arr = []
+	var v = {
+		a: arr
+	}
+	return {
+		s1: "",
+		v: v,
+		s2: ""
+	}
+}
+
+function createObject() {
+	return {
+		s1: "",
+		v: {
+			o: []
+		},
+		s2: ""
+	}
+}
+
+function addShow(eq){
+	eqWrapper.getEQ()[0][1].v.f.arg[0].v.a.push(createFunction(eq,[]));
+}
 
 
 Maybe = function(value) {

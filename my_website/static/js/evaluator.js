@@ -22,7 +22,7 @@ function initPollingGetCalcResult() {
 }
 
 function pollingServerCalcGetResult(nbTry) {
-	if (nbTry < 5) {
+	if (nbTry < 50) {
 		var id_form = $("#id_form_id").serialize();
 		var id_book = $("#id_book_id").serialize();
 		$.get('getCalcResult/?' + id_form, function(data, status) {
@@ -40,7 +40,7 @@ function pollingServerCalcGetResult(nbTry) {
 			}
 		});
 	} else {
-		console.log("Hummm, this is fucking long");
+		console.log("Hummm, this is long , very long");
 		isCalculatingWaiting = false;
 	}
 }

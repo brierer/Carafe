@@ -1,0 +1,97 @@
+[
+{
+  "pk": 1, 
+  "model": "auth.user", 
+  "fields": {
+    "username": "t@t.com", 
+    "first_name": "", 
+    "last_name": "", 
+    "is_active": true, 
+    "is_superuser": true, 
+    "is_staff": true, 
+    "last_login": "2014-05-30T16:09:15.106Z", 
+    "groups": [], 
+    "user_permissions": [], 
+    "password": "pbkdf2_sha256$12000$GuSRiPeoYVKw$7v7kd8aelbxJUd0Sz1giZze58FV9nr+MW2Z4ct18PaQ=", 
+    "email": "t@t.com", 
+    "date_joined": "2014-01-24T01:22:35.111Z"
+  }
+},
+{
+  "pk": 1, 
+  "model": "book.book", 
+  "fields": {
+    "formulas": "show = show([tservice,tsalaire,trente])\n\ntservice = table([[service]],{col:[\"service\"]})\ntsalaire = table([salaires],{col:[\"salaire\"]})\ntrente = table([rente],{col:[\"rente\"]})\n\nrente = multi([0.02,moyensalaire,service])\nmoyensalaire = mean(salaires)\nsalaires = [55000,60000,45000]\nservice = 35", 
+    "created_date": "2014-01-24T01:31:02.126Z", 
+    "user": 1, 
+    "title": "Rente"
+  }
+},
+{
+  "pk": 2, 
+  "model": "book.book", 
+  "fields": {
+    "formulas": "show = show([tablegoal,table(get,{col:[\"Depense\",\"Septembre\",\"Octobre\"]})])\ntablegoal = table(goal,{col:[\"Depense\",\"objectif\"]})\ngoal = [[\"Loyer\",\"Epicerie\",\"Resto\",\"Alcool\",\"Electricite\",\"Ecole\"],[510,200,100,50,40,166]]\nget = [[\"Loyer\",\"Epicerie\",\"Resto\",\"Alcool\",\"Electricite\",\"Ecole\"],\n[510,75,105,7,0,0],\n[510,117,75,0,47,6]]\n\n", 
+    "created_date": "2014-01-24T01:31:02.126Z", 
+    "user": 1, 
+    "title": "Budget"
+  }
+},
+{
+  "pk": 3, 
+  "model": "book.book", 
+  "fields": {
+    "formulas": "show = show([plotLine(x,y,{title:\"MesNotes\",color:\"pink\"}),table([x,y],{col:[\"X\",\"Note\"]}),moyenne])\nmoyenne = [[mean(y)]]\nx = [1,2,3,4,5,6,7]\ny = [0.25,0.72,0.82,0.53,0.75,0.8,0.86]", 
+    "created_date": "2014-01-24T01:31:02.126Z", 
+    "user": 1, 
+    "title": "Graphique"
+  }
+},
+{
+  "pk": 4, 
+  "model": "book.book", 
+  "fields": {
+    "formulas": "show = show([x])\nx = table(desc,{})\ndata = nTimes(1,1000000)\ndesc = descriptive(data)\n", 
+    "created_date": "2014-01-24T01:31:02.126Z", 
+    "user": 1, 
+    "title": "Descriptive"
+  }
+},
+{
+  "pk": 5, 
+  "model": "book.book", 
+  "fields": {
+    "formulas": "show = show([table([country,gdp],{col:[\"Country\",\"GDP\"]}),[[mean(gdp)]]])\ngdp = [-2,2.4,\"\",\"\",\"\",-7.9,\"\",\"\",0.7,1,2.4,2.9,\"\",\"\",\"\",\"\",\"\",2.6]\ncountry = [\"US\",\"UK\",\"Sweden\",\"Spain\",\"Portugal\",\n\"NewZealand\",\n\"Netherlands\",\"Norway\",\"Japan\",\"Italy\",\n\"Ireland\",\"Greece\",\"Germany\",\"France\",\"Finland\",\n\"Denmark\",\"Canada\",\"Belgium\",\"Austria\",\"Australia\"]", 
+    "created_date": "2014-02-15T18:36:33.132Z", 
+    "user": 1, 
+    "title": "Error Excel"
+  }
+},
+{
+  "pk": 6, 
+  "model": "book.book", 
+  "fields": {
+    "formulas": "show = show([table(means,{col:[\"Name\"]}),table(noteTop,{col:[\"Nom\",\"Note\"]})])\n\nmeans = [[mean(col(1,noteTop)),\"z\"]]\n\nnoteTop = take(10,noteSorted)\nnoteSorted = sortTable(1,note)\n\nnote = [name,noteExam]\nname = [\"Lili\",\"Nicole\",\"Steve\",\"George\",\"Bob\",\"Leonardo\",\"Raphael\",\"Carey\",\"Naomi\",\"Catherine\",\"Julia\",\n\"Carolina\",\"Madonna\",\"Sherron\",\"Diana\"]\nnoteExam = [99,41,55,22,37,75,19,74,73,85,63,60,82,54,14]", 
+    "created_date": "2014-02-15T18:36:33.132Z", 
+    "user": 1, 
+    "title": "Exam"
+  }
+},
+{
+  "pk": 7, 
+  "model": "book.book", 
+  "fields": {
+    "formulas": null, 
+    "created_date": "2014-05-29T01:34:01.710Z", 
+    "user": 1, 
+    "title": "Test"
+  }
+},
+{
+  "pk": 1, 
+  "model": "profil.profil", 
+  "fields": {
+    "user": 1
+  }
+}
+]
