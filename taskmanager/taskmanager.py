@@ -11,8 +11,8 @@ from collections import OrderedDict
 class Receiver:
     class __OnlyOne:
         def __init__(self):
-        	#self.redis   = redis.StrictRedis(host='localhost' ) 
-            self.redis = redis.StrictRedis(host='pub-redis-14381.us-east-1-3.1.ec2.garantiadata.com', port=14381, db=0 , password="0UbTImi5I9qQ9ebQ" )
+        	self.redis   = redis.StrictRedis(host='localhost' ) 
+            #self.redis = redis.StrictRedis(host='pub-redis-14381.us-east-1-3.1.ec2.garantiadata.com', port=14381, db=0 , password="0UbTImi5I9qQ9ebQ" )
        
 
     	def receive(self, name):
@@ -50,7 +50,7 @@ class Sender:
             print url_str
             url = urlparse.urlparse(url_str)
            #params = pika.ConnectionParameters(host="lean-fiver-20.bigwig.lshift.net", port = 11022, virtual_host="vndrShegf7N4",credentials=pika.PlainCredentials("5mPGLSH5", "-JSed3pUDdfCEUR9i-Bz1dXwZTtb7iGA"))
-            params = pika.ConnectionParameters(host='107.170.167.54')
+            params = pika.ConnectionParameters(host='localhost',heartbeat_interval = 0)
             connection = pika.BlockingConnection(parameters = params)
             self.channel = connection.channel()
             print '\033[1;32m[RMQ]  Ready\033[1;m'
@@ -61,6 +61,7 @@ class Sender:
       
     instance = None	
     def sendMessage(self, message):
+        print message
     	if not Sender.instance:
             Sender.instance = Sender.__OnlyOne()
             if Sender.instance.is_close():
@@ -80,15 +81,15 @@ def initCalc(key, formulas):
     #print formulas
     Receiver().clear(key)
     sender = Sender().sendMessage(key+";"+formulas)
-    #print " [x] Sent " + key
+    print " [x] Sent " + key
     return None 
 
 def getResult(key, id):
     print int(round(time.time() * 1000))
     print " [x] Get  " + key
     result = Receiver().getLastMessageFrom(key)
-    if (result == ""):
-        return None
+    if (result is None or result == ""):
+        return None 
     convertJSON = json.loads(result,object_pairs_hook=OrderedDict) 
     #print result
     print "Fin:"

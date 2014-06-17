@@ -1,0 +1,332 @@
+body, html {
+	height: 100%;
+	width: 100%;
+}
+
+body, h1, h2, h3, h4, h5, h6 {
+	font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.lead {
+	font-size: 18px;
+	font-weight: 400;
+}
+
+.intro-header {
+	padding-top: 50px; /* If you're making other pages, make sure there is 50px of padding to make sure the navbar doesn't overlap content! */
+	padding-bottom: 50px;
+	color: #f8f8f8;
+	background: no-repeat center center;
+	background-size: cover;
+	text-align: center;
+	border-bottom: 1px solid #E7E7E7;
+	background: url(../img/bubbles.png) no-repeat center bottom;
+	background-size:cover;
+}
+
+.intro-message {
+	position: relative;
+	padding-top: 5%;
+	padding-bottom: 5%;
+}
+
+.intro-message > h1 {
+	margin: 0;
+	font-size: 5em;
+	color: #888;
+}
+
+.books{
+padding-top: 50px;
+	
+}
+
+.intro-divider {
+	width: 400px;
+	border-top: 1px solid #f8f8f8;
+	border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.intro-message > h3 {
+	color: #888
+}
+
+@media (max-width: 767px) {
+	.intro-message {
+		padding-bottom: 15%;
+	}
+
+	.intro-message > h1 {
+		font-size: 3em;
+	}
+
+	ul.intro-social-buttons > li {
+		display: block;
+		margin-bottom: 20px;
+		padding: 0;
+	}
+
+	ul.intro-social-buttons > li:last-child {
+		margin-bottom: 0;
+	}
+
+	.intro-divider {
+		width: 100%;
+	}
+}
+
+.network-name {
+	text-transform: uppercase;
+	font-size: 14px;
+	font-weight: 400;
+	letter-spacing: 2px;
+}
+
+.content-section-a {
+	background-color: #f8f8f8;
+	padding: 50px 0;
+}
+
+.content-section-b {
+	border-top: 1px solid #e7e7e7;
+	border-bottom: 1px solid #e7e7e7;
+	padding: 50px 0;
+}
+
+.section-heading {
+	margin-bottom: 30px;
+}
+
+.section-heading-spacer {
+	border-top: 3px solid #e7e7e7;
+	width: 200px;
+	float: left;
+}
+
+.banner {
+	padding:30px 0;
+	color: #888;
+	background-size: cover;
+}
+
+.banner h2 {
+	margin: 0;
+	font-size: 3em;
+}
+
+.banner ul {
+	margin-bottom: 0;
+}
+
+.banner-social-buttons {
+	float: right;
+	margin-top: 0;
+}
+
+@media (max-width: 1199px) {
+	ul.banner-social-buttons {
+		float: left;
+		margin-top: 15px;
+	}	
+}
+
+@media (max-width: 767px) {
+	.banner h2 {
+		margin: 0;
+		text-shadow: 2px 2px 3px rgba(0, 0, 0, 0.6);
+		font-size: 3em;
+	}
+
+	ul.banner-social-buttons > li {
+		display: block;
+		margin-bottom: 20px;
+		padding: 0;
+	}
+
+	ul.banner-social-buttons > li:last-child {
+		margin-bottom: 0;
+	}	
+}
+
+footer {
+	background-color: #f8f8f8;
+	padding: 50px 0;
+}
+
+p.copyright {
+	margin: 15px 0 0;
+}
+
+.connection {
+	display: none;
+	max-width: 200px;
+	margin-left: auto;
+    margin-right: auto;
+}
+
+.connectionLogin {
+	max-width: 200px;
+	margin-left: auto;
+    margin-right: auto;
+}
+
+
+
+@media (max-width: 1439px) and (min-width: 0px)
+ #browser {
+width: 607px;
+height: 440px;
+}
+
+#browser {
+-webkit-background-clip: border-box;
+-webkit-background-origin: padding-box;
+-webkit-background-size: 100%;
+-webkit-font-smoothing: antialiased;
+background-attachment: scroll;
+background-clip: border-box;
+background-color: rgba(0, 0, 0, 0);
+background-image: url(https://www.digitalocean.com/assets/images/browser-ad314994.jpg);
+background-origin: padding-box;
+background-size: 100%;
+border-bottom-color: rgb(222, 222, 222);
+border-bottom-left-radius: 6px;
+border-bottom-right-radius: 6px;
+border-bottom-style: solid;
+border-bottom-width: 1px;
+border-image-outset: 0px;
+border-image-repeat: stretch;
+border-image-slice: 100%;
+border-image-source: none;
+border-image-width: 1;
+border-left-color: rgb(222, 222, 222);
+border-left-style: solid;
+border-left-width: 1px;
+border-right-color: rgb(222, 222, 222);
+border-right-style: solid;
+border-right-width: 1px;
+border-top-color: rgb(222, 222, 222);
+border-top-left-radius: 6px;
+border-top-right-radius: 6px;
+border-top-style: solid;
+border-top-width: 1px;
+box-sizing: border-box;
+display: block;
+float: left;
+font-family: proxima-nova, sans-serif;
+font-size: 16px;
+font-weight: normal;
+height: 440px;
+margin-bottom: 0px;
+margin-left: 0px;
+margin-right: 100px;
+margin-top: 0px;
+overflow-x: hidden;
+overflow-y: hidden;
+padding-bottom: 0px;
+padding-left: 0px;
+padding-right: 0px;
+padding-top: 0px;
+position: relative;
+text-align: center;
+width: 607px;
+}
+
+#browser #last-vid{
+	-webkit-background-clip: border-box;
+-webkit-background-origin: padding-box;
+-webkit-background-size: auto;
+-webkit-font-smoothing: antialiased;
+background-attachment: scroll;
+background-clip: border-box;
+background-color: rgba(255, 255, 255, 0.6);
+background-image: none;
+background-origin: padding-box;
+background-size: auto;
+bottom: 0px;
+box-sizing: border-box;
+display: none;
+font-family: proxima-nova, sans-serif;
+font-size: 16px;
+font-weight: normal;
+height: auto;
+left: 0px;
+margin-bottom: 0px;
+margin-left: 0px;
+margin-right: 0px;
+margin-top: 0px;
+padding-bottom: 0px;
+padding-left: 0px;
+padding-right: 0px;
+padding-top: 0px;
+position: absolute;
+text-align: center;
+top: 0px;
+width: 100%;
+z-index: 10;
+}
+
+#browser video{
+	-webkit-font-smoothing: antialiased;
+border-bottom-color: rgb(0, 0, 0);
+border-bottom-style: none;
+border-bottom-width: 0px;
+border-image-outset: 0px;
+border-image-repeat: stretch;
+border-image-slice: 100%;
+border-image-source: none;
+border-image-width: 1;
+border-left-color: rgb(0, 0, 0);
+border-left-style: none;
+border-left-width: 0px;
+border-right-color: rgb(0, 0, 0);
+border-right-style: none;
+border-right-width: 0px;
+border-top-color: rgb(0, 0, 0);
+border-top-style: none;
+border-top-width: 0px;
+box-sizing: border-box;
+display: block;
+font-family: proxima-nova, sans-serif;
+font-size: 16px;
+font-weight: normal;
+height: 438px;
+left: 0px;
+margin-bottom: 0px;
+margin-left: 0px;
+margin-right: 0px;
+margin-top: 0px;
+object-fit: contain;
+padding-bottom: 0px;
+padding-left: 0px;
+padding-right: 0px;
+padding-top: 0px;
+position: absolute;
+text-align: center;
+top: 40px;
+width: 605px;
+}
+
+#browser .url {
+-webkit-font-smoothing: antialiased;
+box-sizing: border-box;
+color: rgb(147, 147, 147);
+display: block;
+font-family: proxima-nova, sans-serif;
+font-size: 12px;
+font-weight: normal;
+height: 15px;
+left: 10px;
+margin-bottom: 0px;
+margin-left: 0px;
+margin-right: 0px;
+margin-top: 0px;
+padding-bottom: 0px;
+padding-left: 0px;
+padding-right: 0px;
+padding-top: 0px;
+position: absolute;
+text-align: center;
+top: 18px;
+width: 214px;
+}
