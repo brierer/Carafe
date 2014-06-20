@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-from django_hstore import hstore
+
 import datetime
 
 class BookManager(models.Manager):
@@ -9,7 +9,7 @@ class BookManager(models.Manager):
  
 class Book(models.Model):
     title = models.CharField(max_length=100)
-    formulas = models.TextField(null=True)
+    equations = models.TextField(null=True)
     created_date = models.DateTimeField(default=datetime.datetime.now)
     user = models.OneToOneField(User) 
     private = models.BooleanField(default=False)

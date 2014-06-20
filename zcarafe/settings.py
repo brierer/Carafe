@@ -137,7 +137,6 @@ INSTALLED_APPS = (
     'south',
     'avatar',
     'guardian',
-    'table',
 )
 AUTHENTICATION_BACKENDS = (
     # Default backend

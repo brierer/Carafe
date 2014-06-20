@@ -28,7 +28,7 @@ def get_client_ip(request):
 
 def validate_send_calc(form, request):
 	if form.is_valid():
-			formulas = form.cleaned_data['formulas']
+			equations = form.cleaned_data['equations']
 			form_id = form.cleaned_data['form_id']
 			book_id = form.cleaned_data['book_id']
 			read_only = form.cleaned_data['read_only']
@@ -38,11 +38,11 @@ def validate_send_calc(form, request):
 				valid = False
 			else:	
 				print "go calc"
-				formulas = filter(lambda a: ord(a) != 13 , formulas)
+				equations = filter(lambda a: ord(a) != 13 , equations)
 				key = form_id
-				resultat = initCalc(key, formulas)
+				resultat = initCalc(key, equations)
 				if not read_only:
-					book.formulas =	formulas
+					book.equations =	equations
 					book.save()
 				valid = True
 	else:
@@ -57,7 +57,7 @@ def generate_calc_key(request):
 
 def post_calc_result(request):
 	if request.method == 'POST':  
-		form = FormulasForm(request.POST) 
+		form = equationsForm(request.POST) 
 		validate_send_calc(form, request)
 		return HttpResponse(json.dumps(None), content_type="application/json")
 	else:
@@ -78,10 +78,10 @@ def get_book(request, book_id):
 	book = get_object_or_404(Book, pk=book_id)
 	require_permission_book(request.user, book)
 	read_only = book.is_book_readable(request.user, request.GET.get('read', '')=='true')
-	formulas =	book.formulas	
+	equations =	book.equations	
 	key = generate_calc_key(request) 
-	result = initCalc(key, formulas)
-	form = FormulasForm({'formulas':formulas,'read_only':read_only,'form_id':key,'book_id':book_id})  #
+	result = initCalc(key, equations)
+	form = EquationsForm({'equations':equations,'read_only':read_only,'form_id':key,'book_id':book_id})  #
 	return render(request, 'book/workspace.html', locals())  
 
 @require_GET
@@ -89,10 +89,10 @@ def watch_book(request,book_id):
 	book = Book.get_book_by_Id(book_id)
 	if book.private and not user.has_perm("book.watch"):
 		raise Http404  
-	formulas =	book.formulas	
+	equations =	book.equations	
 	key = generate_calc_key(request) 
-	resultat = initCalc(key, formulas)
-	form = FormulasForm({'formulas':formulas,'read_only':True,'form_id':key,'book_id':book_id}) #
+	resultat = initCalc(key, equations)
+	form = EquationsForm({'equations':equations,'read_only':True,'form_id':key,'book_id':book_id}) #
 	return render(request, 'book/watch.html', locals()) 
 
 
