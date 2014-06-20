@@ -115,6 +115,7 @@ WSGI_APPLICATION = 'zcarafe.wsgi.application'
 TEMPLATE_DIRS = (
     "/home/raph/python/zcarafe/templates"
 )
+SOUTH_TESTS_MIGRATE = False
 
 INSTALLED_APPS = (
     'django.contrib.auth',
@@ -136,6 +137,7 @@ INSTALLED_APPS = (
     'south',
     'avatar',
     'guardian',
+    'table',
 )
 AUTHENTICATION_BACKENDS = (
     # Default backend

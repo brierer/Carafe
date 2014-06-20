@@ -8,15 +8,15 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Adding field 'Book.private'
-        db.add_column(u'book_book', 'private',
-                      self.gf('django.db.models.fields.BooleanField')(default=False),
+        # Adding field 'Book.data'
+        db.add_column(u'book_book', 'data',
+                      self.gf(u'django_hstore.fields.DictionaryField')(default='', db_index=True),
                       keep_default=False)
 
 
     def backwards(self, orm):
-        # Deleting field 'Book.private'
-        db.delete_column(u'book_book', 'private')
+        # Deleting field 'Book.data'
+        db.delete_column(u'book_book', 'data')
 
 
     models = {
@@ -52,6 +52,7 @@ class Migration(SchemaMigration):
         u'book.book': {
             'Meta': {'object_name': 'Book'},
             'created_date': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
+            'data': (u'django_hstore.fields.DictionaryField', [], {'default': "''", 'db_index': 'True'}),
             'formulas': ('django.db.models.fields.TextField', [], {'null': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'private': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),

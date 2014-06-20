@@ -76,13 +76,15 @@ class Sender:
       
 
 def initCalc(key, formulas):
+    if key is None or formulas is None:
+        return False
     print "Debut:"
     print int(round(time.time() * 1000))
     #print formulas
     Receiver().clear(key)
     sender = Sender().sendMessage(key+";"+formulas)
     print " [x] Sent " + key
-    return None 
+    return True 
 
 def getResult(key, id):
     print int(round(time.time() * 1000))
