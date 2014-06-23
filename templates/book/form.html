@@ -1,5 +1,5 @@
     <br/>
-    <form id="editor" method=post action="{% url "book.views.get_book" book_id %}">
+    <form id="editor" method=post action="{% url "book.views.work_book" book_id %}">
                 {% csrf_token %}
                 <div class="panel panel-default">
                     <div class="panel-heading">
@@ -11,7 +11,7 @@
                     {{ form.form_id }} 
                     {{ form.book_id }} 
                     {{ form.read_only }}
-                    <textarea id="id_formulas" name="formulas" class="form-control" rows="3">{{formulas}}</textarea>
+                    <textarea id="id_equations" name="equations" class="form-control" >{{ form.equations.value }}</textarea>
                 </div>
     </form>
     

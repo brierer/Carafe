@@ -73,18 +73,26 @@ class Sender:
     def __init__(self):
         if not Sender.instance:
             Sender.instance = Sender.__OnlyOne()
-      
 
-def initCalc(key, formulas):
-    if key is None or formulas is None:
-        return False
-    print "Debut:"
-    print int(round(time.time() * 1000))
-    #print formulas
-    Receiver().clear(key)
-    sender = Sender().sendMessage(key+";"+formulas)
-    print " [x] Sent " + key
-    return True 
+
+
+class SendCalc:
+    def __init__(self,key,formulas):
+        self.key = key
+        if self.key is None or formulas is None:
+            return False
+        #print formulas
+        Receiver().clear(self.key)
+        sender = Sender().sendMessage(self.key+";"+formulas)
+        print " [x] Sent " + self.key
+        self.status = True
+
+class InitCalc(SendCalc):
+    def __init__(self,seed,formulas):
+        SendCalc.__init__(self,generate_task_key(seed),formulas)
+
+
+
 
 def getResult(key, id):
     print int(round(time.time() * 1000))
@@ -97,4 +105,9 @@ def getResult(key, id):
     print "Fin:"
     print int(round(time.time() * 1000))
     return convertJSON
+
+
+def generate_task_key(seed):
+    time_id = time.time()
+    return seed + str(time_id)
 

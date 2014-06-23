@@ -39,8 +39,7 @@ def validate_send_calc(form, request):
 			else:	
 				print "go calc"
 				equations = filter(lambda a: ord(a) != 13 , equations)
-				key = form_id
-				resultat = initCalc(key, equations)
+				resultat = SendCalc(form_id, equations)
 				if not read_only:
 					book.equations =	equations
 					book.save()
@@ -51,13 +50,10 @@ def validate_send_calc(form, request):
 		valid = False
 	return valid				
 	
-def generate_calc_key(request):
-	time_id = time.time()
-	return get_client_ip(request) + str(time_id)
 
 def post_calc_result(request):
 	if request.method == 'POST':  
-		form = equationsForm(request.POST) 
+		form = EquationsForm(request.POST) 
 		validate_send_calc(form, request)
 		return HttpResponse(json.dumps(None), content_type="application/json")
 	else:
@@ -73,27 +69,29 @@ def get_calc_result(request):
 	resultat = getResult(key ,1)	
 	return HttpResponse(json.dumps(resultat), content_type="application/json")
 
+
+def get_book(request, book_id, read):
+	book = get_book_or_404(request.user, book_id)
+	calc = InitCalc(get_client_ip(request), book.equations)
+	read_only = book.is_book_readable(request.user, read)
+	form = EquationsForm({'equations':book.equations,
+						  'read_only':read_only,
+						  'form_id':calc.key,
+						  'book_id':book.id})				    
+	return locals()  
+
 @require_GET
-def get_book(request, book_id):
-	book = get_object_or_404(Book, pk=book_id)
-	require_permission_book(request.user, book)
-	read_only = book.is_book_readable(request.user, request.GET.get('read', '')=='true')
-	equations =	book.equations	
-	key = generate_calc_key(request) 
-	result = initCalc(key, equations)
-	form = EquationsForm({'equations':equations,'read_only':read_only,'form_id':key,'book_id':book_id})  #
-	return render(request, 'book/workspace.html', locals())  
+def work_book(request, book_id):				    
+	return render(request, 
+				  'book/workspace.html', 
+				  get_book(request, 
+				  		   book_id, 
+				  		   request.GET.get('read', '')=='true'))  
+
 
 @require_GET
 def watch_book(request,book_id):
-	book = Book.get_book_by_Id(book_id)
-	if book.private and not user.has_perm("book.watch"):
-		raise Http404  
-	equations =	book.equations	
-	key = generate_calc_key(request) 
-	resultat = initCalc(key, equations)
-	form = EquationsForm({'equations':equations,'read_only':True,'form_id':key,'book_id':book_id}) #
-	return render(request, 'book/watch.html', locals()) 
+	return render(request, 'book/watch.html',  get_book(request, book_id, True)) 
 
 
 def create_book(request):
@@ -121,9 +119,12 @@ class UpdateBook(UpdateView):
         return context    
 
 
+def get_book_or_404(user, book_id):
+	book = get_object_or_404(Book, pk=book_id)
+	require_permission_book(user, book)
+	return book
 
-		
 def require_permission_book(user, book):
-	if not book.has_perm(user):
+	if not book.has_perm(user) and book.private:
 			raise Http404 
 		

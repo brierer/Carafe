@@ -120,11 +120,11 @@
                                                 {% if not read_profil %}
                                                     <td style="width: 179px;"> {{book.created_date}} </td>
                                                     <td style="width: 179px;">    
-                                                    <a href="/book/{{book.link}}" class="btn btn-default"><i class="fa fa-folder-open fa-fw"></i>Open</a> </td>
+                                                    <a href="/book/{{book.id}}" class="btn btn-default"><i class="fa fa-folder-open fa-fw"></i>Open</a> </td>
                                                     <td style="width: 179px;">  
                                                     <a data-href="{% url "update-book" pk=book.id %}" class="btn btn-default update-modal"><i class="fa fa-gear fa-fw"></i>Edit</a> </td>
                                                 {% endif %}
-                                                    <td style="width: 179px;"><a href="/book/{{book.link}}?read=1" class="btn btn-default"><i class="fa fa-eye fa-fw"></i>Read</a> </td>
+                                                    <td style="width: 179px;"><a href="/book/{{book.id}}?read=1" class="btn btn-default"><i class="fa fa-eye fa-fw"></i>Read</a> </td>
                                                     <td style="width: 179px;"> {{book.private}} </td>
                                                     <td>  
                                                 </tr> 

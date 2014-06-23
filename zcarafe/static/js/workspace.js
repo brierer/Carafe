@@ -64,7 +64,7 @@ function initComposent() {
     }
   )
  
-  editor = CodeMirror.fromTextArea(document.getElementById("id_formulas"), {
+  editor = CodeMirror.fromTextArea(document.getElementById("id_equations"), {
     mode: "haskell",
     lineNumbers: true,
     theme: "elegant"
@@ -103,7 +103,7 @@ function initComposent() {
 
 
 function insertAtCursor(text) {
-  var field = document.getElementById("id_formulas");
+  var field = document.getElementById("id_equations");
 
   if (document.selection) {
     var range = document.selection.createRange();

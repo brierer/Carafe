@@ -6,8 +6,8 @@ from book.views import UpdateBook
 # admin.autodiscover()
 
 urlpatterns = patterns('book.views',
-	url(r'^([0-9]+)', 'get_book'),
-	url(r'^watch/(\d)', 'watch_book'),
+	url(r'^([0-9]+)', 'work_book'),
+	url(r'^watch/([0-9]+)', 'watch_book'),
 	url(r'^books', 'create_book'),
 	url(r'^postCalcResult', 'post_calc_result'),
 	url(r'^getCalcResult/$', 'get_calc_result'),

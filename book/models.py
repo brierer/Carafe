@@ -26,7 +26,7 @@ class Book(models.Model):
     def has_perm(self, user):
         if not user.has_perm("book.work",self):
             if self.private :
-                raise False
+                return False
         return True 
 
     def is_book_readable(self, user, read):
