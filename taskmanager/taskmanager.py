@@ -77,19 +77,24 @@ class Sender:
 
 
 class SendCalc:
-    def __init__(self,key,formulas):
+    def __init__(self,key ,formulas):
         self.key = key
-        if self.key is None or formulas is None:
+        self.formulas = formulas
+    
+    def send(self):
+        if self.key is None or self.formulas is None:
             return False
         #print formulas
         Receiver().clear(self.key)
-        sender = Sender().sendMessage(self.key+";"+formulas)
+        sender = Sender().sendMessage(self.key+";"+self.formulas)
         print " [x] Sent " + self.key
-        self.status = True
+        return True
+
 
 class InitCalc(SendCalc):
     def __init__(self,seed,formulas):
-        SendCalc.__init__(self,generate_task_key(seed),formulas)
+        self.key = generate_task_key(seed)
+        SendCalc.__init__(self, self.key,formulas)
 
 
 

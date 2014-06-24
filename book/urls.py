@@ -6,11 +6,11 @@ from book.views import UpdateBook
 # admin.autodiscover()
 
 urlpatterns = patterns('book.views',
-	url(r'^([0-9]+)', 'work_book'),
-	url(r'^watch/([0-9]+)', 'watch_book'),
+	url(r'^(?P<book_id>[0-9]+)', 'work_book'),
+	url(r'^watch/(?P<book_id>[0-9]+)', 'watch_book'),
 	url(r'^books', 'create_book'),
-	url(r'^postCalcResult', 'post_calc_result'),
-	url(r'^getCalcResult/$', 'get_calc_result'),
-	url(r'^watch/getCalcResult/$', 'get_calc_result'),
+	url(r'^postCalcResult', 'post_calc'),
+	url(r'^getCalcResult/$', 'get_calc'),
+	url(r'^watch/getCalcResult/$', 'get_calc'),
 	url(r'^update/(?P<pk>\d+)/$', UpdateBook.as_view(), name = "update-book"),
 	)
