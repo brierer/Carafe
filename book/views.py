@@ -1,9 +1,9 @@
 #-*- coding: utf-8 -*-
 from django.shortcuts import render
 from django.core.urlresolvers import reverse
-from book.forms import *
+from book.forms import EquationsForm, BookForm, CreateBookForm
 from book.models import Book
-from taskmanager.taskmanager import *
+from taskmanager.taskmanager import InitCalc, get_result
 from django.shortcuts import redirect
 from django.http import HttpResponse, Http404
 from django.shortcuts import get_object_or_404
@@ -65,16 +65,17 @@ def post_calc(request):
         form = EquationsForm(request.POST)
         res = form.update_equations(request.user)
     else:
-        res = {'result': 'error', 'message': 'Invalid Request'}
+        res = {u'result': u'error', u'message': u'Invalid Request'}
     return HttpResponse(json.dumps(res), content_type="application/json")
 
 
-@require_GET
 def get_calc(request):
-    form_id = request.GET.get('form_id', 'default')
-    key = form_id
-    resultat = getResult(key, 1)
-    return HttpResponse(json.dumps(resultat), content_type="application/json")
+    if request.method == 'GET':
+        form_id = request.GET.get('form_id', 'default')
+        res = get_result(form_id)
+    else:
+        res = {u'result': u'error', u'message': u'Invalid Request'}
+    return HttpResponse(json.dumps(res), content_type="application/json")
 
 # subFunction
 

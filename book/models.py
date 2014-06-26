@@ -46,7 +46,7 @@ class Book(models.Model):
     def is_book_readable(self, user, read):
         return (not user.has_perm("book.work", self)) or read
 
-    def safe_update(self, read=True, kwargs=None):
-        if not read:
+    def safe_update(self, user, read=True, kwargs=None):
+        if not read and user.has_perm("work", self):
             self.equations = kwargs['equations']
             self.save()

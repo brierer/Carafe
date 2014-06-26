@@ -30,11 +30,11 @@ class EquationsForm(forms.Form):
         self.fields['read_only'] = forms.BooleanField(
             widget=forms.HiddenInput(), initial=read_only)
 
-    def save(self):
+    def save(self, user):
         read_only = self.cleaned_data['read_only']
         equations = filter(
             lambda a: ord(a) != 13, self.cleaned_data['equations'])
-        self.book.safe_update(read_only, {'equations': equations})
+        self.book.safe_update(user, read_only, {'equations': equations})
 
     def get_book(self, user):
         if self.is_valid():
@@ -53,7 +53,7 @@ class EquationsForm(forms.Form):
     def update_equations(self, user):
         book = self.get_book(user)
         if book is not None:
-            self.save()
+            self.save(user)
             res = self.send_task()
             return {'result': 'ok', 'message': res}
         else:
