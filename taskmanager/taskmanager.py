@@ -6,6 +6,7 @@ import pika
 import time
 import os
 import urlparse
+import logging
 from collections import OrderedDict
 
 
@@ -22,7 +23,7 @@ class Message:
 
 
 def errMessage(message):
-    return errMessage(message).to_json()
+    return ErrMessage(message).to_json()
 
 
 class ErrMessage(Message):
@@ -38,9 +39,6 @@ class ErrMessage(Message):
                          status="err",
                          typeMsg=typeMsg,
                          msg=self.errors[typeMsg])
-
-    def errorMessage(typeMsg):
-        ErrMessage(typeMsg).to_json()
 
 
 def goodMessage(message):
@@ -66,6 +64,7 @@ class Receiver:
     class __OnlyOne:
 
         def __init__(self):
+            logging.info('Receiver Start', exc_info=True)
             self.redis = redis.StrictRedis(host='localhost')
         #self.redis = redis.StrictRedis(host='pub-redis-14381.us-east-1-3.1.ec2.garantiadata.com', port=14381, db=0 , password="0UbTImi5I9qQ9ebQ" )
 
@@ -98,18 +97,19 @@ class Sender:
     class __OnlyOne:
 
         def __init__(self):
+         
             url_str = os.environ.get(
                 'tiger.cloudamqp.com',
                 'amqp://vidvjemc:27f27zSadNC1KCEfEJoSrsSDP80Vbtrn@tiger.cloudamqp.com/vidvjemc')
             self.url = urlparse.urlparse(url_str)
             self.params = pika.ConnectionParameters(
-                host='localhost', heartbeat_interval=5)
+                host='localhost', heartbeat_interval=1)
             self.connection = pika.BlockingConnection(parameters=self.params)
             self.channel = self.connection.channel()
-            print '\033[1;32m[RMQ]  Ready\033[1;m'
+            logging.info('Sender Start', exc_info=True)
 
         def reconnect(self):
-            print '\033[1;32m[RMQ]  Reconnect\033[1;m'
+            logging.info('Sender Reconnect', exc_info=True)
             self.connection = pika.BlockingConnection(parameters=self.params)
             self.channel = self.connection.channel()
 
@@ -122,7 +122,8 @@ class Sender:
             except Exception:
                 if (nb < 5):
                     self.reconnect()
-                    self.send(message, nb + 1)
+                    return self.send(message, nb + 1)
+            logging.info('Sender down', exc_info=True)
             return errMessage("send")
 
     instance = None

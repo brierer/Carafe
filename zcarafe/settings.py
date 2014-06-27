@@ -11,13 +11,20 @@ MANAGERS = ADMINS
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': 'carafe',                      # Or path to database file if using sqlite3.
+        # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        # Or path to database file if using sqlite3.
+        'NAME': 'carafe',
         # The following settings are not used with sqlite3:
         'USER': 'postgres',
         'PASSWORD': 'niconico',
-        'HOST': 'localhost',                      # Empty for localhost through domain sockets or           '127.0.0.1' for localhost through TCP.
-        'PORT': '',                      # Set to empty string for default.
+        # Empty for localhost through domain sockets or           '127.0.0.1'
+        # for localhost through TCP.
+        'HOST': 'localhost',
+        'PORT': '',
+        'OPTIONS': {
+            'autocommit': True,
+        }                      # Set to empty string for default.
     }
 }
 
@@ -82,7 +89,7 @@ STATICFILES_DIRS = (
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-#    'django.contrib.staticfiles.finders.DefaultStorageFinder',
+    #    'django.contrib.staticfiles.finders.DefaultStorageFinder',
 )
 
 # Make this unique, and don't share it with anybody.
@@ -92,7 +99,7 @@ SECRET_KEY = '2#4em)$m4(7iae!962x4ud6)g5-5x2gcdd0cud%-5&amp;_08-^u!v'
 TEMPLATE_LOADERS = (
     'django.template.loaders.filesystem.Loader',
     'django.template.loaders.app_directories.Loader',
-#     'django.template.loaders.eggs.Loader',
+    #     'django.template.loaders.eggs.Loader',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -126,7 +133,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'rest_framework',
     # Uncomment the next line to enable the admin:
-     'django.contrib.admin',
+    'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
     'home',
@@ -137,6 +144,7 @@ INSTALLED_APPS = (
     'south',
     'avatar',
     'guardian',
+    'raven.contrib.django.raven_compat',
 )
 AUTHENTICATION_BACKENDS = (
     # Default backend
@@ -146,7 +154,7 @@ AUTHENTICATION_BACKENDS = (
     'guardian.backends.ObjectPermissionBackend',
 )
 
-LOGIN_URL = "/login" 
+LOGIN_URL = "/login"
 LOGIN_REDIRECT_URL = "/profil/"
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to
@@ -155,26 +163,44 @@ LOGIN_REDIRECT_URL = "/profil/"
 # more details on how to customize your logging configuration.
 LOGGING = {
     'version': 1,
-    'disable_existing_loggers': False,
-    'filters': {
-        'require_debug_false': {
-            '()': 'django.utils.log.RequireDebugFalse'
-        }
+    'disable_existing_loggers': True,
+    'root': {
+        'level': 'INFO',
+        'handlers': ['sentry'],
+    },
+    'formatters': {
+        'verbose': {
+            'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
+        },
     },
     'handlers': {
-        'mail_admins': {
-            'level': 'ERROR',
-            'filters': ['require_debug_false'],
-            'class': 'django.utils.log.AdminEmailHandler'
+        'sentry': {
+            'level': 'INFO',
+            'class': 'raven.contrib.django.raven_compat.handlers.SentryHandler',
+        },
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose'
         }
     },
     'loggers': {
-        'django.request': {
-            'handlers': ['mail_admins'],
+        'django.db.backends': {
             'level': 'ERROR',
-            'propagate': True,
+            'handlers': ['console'],
+            'propagate': False,
         },
-    }
+        'raven': {
+            'level': 'DEBUG',
+            'handlers': ['console'],
+            'propagate': False,
+        },
+        'sentry.error': {
+            'level': 'DEBUG',
+            'handlers': ['console'],
+            'propagate': False,
+        },
+    },
 }
 
 REST_FRAMEWORK = {
@@ -185,7 +211,41 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_RATES': {
         'anon': '100/day',
         'user': '1000/day'
-    }        
+    }
 }
 
 ANONYMOUS_USER_ID = -1
+
+
+# No trailing slash!
+SENTRY_URL_PREFIX = 'http://sentry.example.com'
+
+# SENTRY_KEY is a unique randomly generated secret key for your server, and it
+# acts as a signing token
+SENTRY_KEY = '0123456789abcde'
+
+SENTRY_WEB_HOST = '0.0.0.0'
+SENTRY_WEB_PORT = 9000
+SENTRY_WEB_OPTIONS = {
+    'workers': 3,  # the number of gunicorn workers
+    # detect HTTPS mode from X-Forwarded-Proto header
+    'secure_scheme_headers': {'X-FORWARDED-PROTO': 'https'},
+}
+
+SENTRY_REDIS_OPTIONS = {
+    'hosts': {
+        0: {
+            'host': '127.0.0.1',
+            'port': 6379,
+        }
+    }
+}
+
+RAVEN_CONFIG = {
+    'dsn': 'http://0438e274ee794097893186aad37410c0:3bdbc752f7684c4aaa06459c96be509c@localhost:9000/2',
+}
+
+INSTALLED_APPS = INSTALLED_APPS + (
+    # ...
+    'raven.contrib.django.raven_compat',
+)
