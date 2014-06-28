@@ -1,0 +1,1 @@
+[{"pk": 1, "model": "profil.profil", "fields": {"user": ["raph"]}}, {"pk": 2, "model": "profil.profil", "fields": {"user": ["n@n.com"]}}]
