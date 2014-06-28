@@ -38,7 +38,7 @@
         <!-- Collect the nav links, forms, and other content for toggling -->
         <div class="collapse navbar-collapse navbar-right navbar-ex1-collapse">
           <ul class="nav navbar-nav">
-            <li><a href="#about">How it's Work</a></li>
+            <li><a href="/start/">How it's Work</a></li>
             <li><a href="#services">Demo</a></li>
                <li class="dropdown">
                     <a class="dropdown-toggle" data-toggle="dropdown" href="#">
@@ -124,7 +124,7 @@
                                                     <td style="width: 179px;">  
                                                     <a data-href={% url "update-book" pk=book.id %} class="btn btn-default update-modal"><i class="fa fa-gear fa-fw"></i>Edit</a> </td>
                                                 {% endif %}
-                                                    <td style="width: 179px;"><a href={% url 'book.views.work_book' book_id=book.id %}+"?read=1" class="btn btn-default"><i class="fa fa-eye fa-fw"></i>Read</a> </td>
+                                                    <td style="width: 179px;"><a href={% url 'book.views.work_book' book_id=book.id %}?read=1 class="btn btn-default"><i class="fa fa-eye fa-fw"></i>Read</a> </td>
                                                     <td style="width: 179px;"> {{book.private}} </td>
                                                     <td>  
                                                 </tr> 

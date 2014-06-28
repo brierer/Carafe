@@ -1,0 +1,187 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Carafe</title>
+    
+    <!-- Bootstrap core CSS -->
+    <link href="{{ STATIC_URL }}css/bootstrap.css" rel="stylesheet">
+
+    <!-- Custom Google Web Font -->
+    <link href="{{ STATIC_URL }}font-awesome/css/font-awesome.min.css" rel="stylesheet">
+    <link href='http://fonts.googleapis.com/css?family=Lato:100,300,400,700,900,100italic,300italic,400italic,700italic,900italic' rel='stylesheet' type='text/css'>
+
+    <!-- Add custom CSS here -->
+    <link href="{{ STATIC_URL }}css/landing-page.css" rel="stylesheet">
+
+  </head>
+
+  <body>
+
+    <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand">Carafe</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse navbar-right navbar-ex1-collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="/start/">How it's Work</a></li>
+            <li><a href="/profil/n@n.com">Demo</a></li>
+               <li class="dropdown">
+                    <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                        <i class="fa fa-user fa-fw"></i>  <i class="fa fa-caret-down"></i>
+                    </a>
+                    <ul class="dropdown-menu dropdown-user">
+                        <li><a href="{% url "profil.views.get_user_page" %}"><i class="fa fa-user fa-fw"></i> User Profile</a>
+                        </li>
+                        <li><a href="#"><i class="fa fa-gear fa-fw"></i> Settings</a>
+                        </li>
+                        <li class="divider"></li>
+                        <li><a href="{% url "profil.views.user_logout" %}"><i class="fa fa-sign-out fa-fw"></i> Logout</a>
+                        </li>
+                    </ul>
+                    <!-- /.dropdown-user -->
+                </li>
+          </ul>
+        </div><!-- /.navbar-collapse -->
+      </div><!-- /.container -->
+    </nav>
+
+    
+      <div class="content-section-a">
+
+      <div class="container">
+  
+        <div class="row">
+          <div class="col-lg-5 col-lg-offset-1 col-sm-push-6  col-sm-6">
+            <hr class="section-heading-spacer">
+            <div class="clearfix"></div>
+            <h2 class="section-heading">Become a data alchimist</h2>
+            <p class="lead">Carafe is the simplest way to decant data.<br/> Result will never have taste so good!</p>
+          </div>
+          <div class="col-lg-5 col-sm-pull-6  col-sm-6">
+            <img class="img-responsive" src="{{ STATIC_URL }}img/lab.png" alt="">
+          </div>
+        </div>
+  
+      </div><!-- /.container -->
+
+    </div><!-- /.content-section-a -->
+
+    <div class="content-section-b">
+
+      <div class="container">
+  
+        <div class="row">
+          <div class="col-lg-5 col-sm-6">
+            <hr class="section-heading-spacer">
+            <div class="clearfix"></div>
+            <h2 class="section-heading">Bullet-Proof: </h2>
+            <p class="lead">Easy to use, easy coworking, less operations, all-in one tools.<br>Carafe helps you to reduce analytic errors.</p>
+          </div>
+          <div class="col-lg-5 col-lg-offset-2 col-sm-6">
+            <img class="img-responsive" src="{{ STATIC_URL }}img/shield.png" alt="">
+          </div>
+        </div>
+  
+      </div><!-- /.container -->
+
+    </div><!-- /.content-section-a -->
+
+    <div class="content-section-a">
+
+      <div class="container">
+  
+        <div class="row">
+          <div class="col-lg-5 col-lg-offset-1 col-sm-push-6  col-sm-6">
+            <hr class="section-heading-spacer">
+            <div class="clearfix"></div>
+            <h2 class="section-heading">Over the Cloud</br>With Jet Speed</h2>
+            <p class="lead">Access to your sheets everywhere, everything you need is already there on the web. Even the calculus power: Fast like a G6. Grrrrr! </p>
+          </div>
+          <div class="col-lg-5 col-sm-pull-6  col-sm-6">
+            <img class="img-responsive" src="{{ STATIC_URL }}img/jet.png" alt="">
+          </div>
+        </div>
+  
+      </div><!-- /.container -->
+
+    </div><!-- /.content-section-a -->
+
+    <div class="content-section-b">
+
+      <div class="container">
+       <div id="browser">
+      <div id="last-vid">
+        <a href="#" class="restart standard-button">Replay</a>
+      </div>
+      <p class="url">carafe.io/book</p>
+
+      <video height="100%" class="feature-video" controls autoplay poster="/assets/images/cover_create-e6646e64.jpg">
+      
+        <source src="{{ STATIC_URL }}img/yobody.webm" type="video/webm">
+        Your browser does not support the video tag.
+      </video>
+    </div>
+
+  
+      </div><!-- /.container -->
+
+    </div><!-- /.content-section-a -->
+    <div class="banner content-section-a">
+
+      <div class="container">
+  
+        <div class="row">
+          <div class="col-lg-6">
+            <h3>See some demos:</h3>
+          </div>
+          <div class="col-lg-6">
+            <ul class="list-inline banner-social-buttons">
+              <li><a href="/profil/n@n.com" class="btn btn-default btn-lg"><i class="fa fa-book fa-fw"></i> <span class="network-name">DEMO</span></a></li>
+            </ul>
+          </div>
+        </div>
+  
+      </div><!-- /.container -->
+
+    </div><!-- /.banner -->
+  
+    <footer>
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-12">
+            <ul class="list-inline">
+              <li><a href="#home">Home</a></li>
+              <li class="footer-menu-divider">&sdot;</li>
+              <li><a href="#about">About</a></li>
+              <li class="footer-menu-divider">&sdot;</li>
+              <li><a href="#services">Services</a></li>
+              <li class="footer-menu-divider">&sdot;</li>
+              <li><a href="#contact">Contact</a></li>
+            </ul>
+            <p class="copyright text-muted small">Copyright &copy; Carafe.io 2014. All Rights Reserved</p>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="{{ STATIC_URL }}js/jquery-1.10.2.js"></script>
+    <script src="{{ STATIC_URL }}js/bootstrap.js"></script>
+    <script src="{{ STATIC_URL }}js/home.js"></script>
+  </body>
+</html>

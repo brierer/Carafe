@@ -18,7 +18,7 @@ def home(request):
             # Nous récupérons le nom d'utilisateur
             username = form.cleaned_data["username"]
             password = form.cleaned_data["password"]  # … et le mot de passe
-            #Nous vérifions si les données sont correctes
+            # Nous vérifions si les données sont correctes
             user = authenticate(username=username, password=password)
             if user:  # Si l'objet renvoyé n'est pas None
                 login(request, user)  # nous connectons l'utilisateur
@@ -33,6 +33,10 @@ def home(request):
         form = ConnexionForm()
 
     return render(request, 'home/home.html', locals())
+
+
+def start(request):
+    return render(request, 'home/start.html', locals())
 
 
 def log(request):

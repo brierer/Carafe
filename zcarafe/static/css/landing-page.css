@@ -1,10 +1,17 @@
 body, html {
 	height: 100%;
 	width: 100%;
+	background-color: #f8f8f8
 }
 
 body, h1, h2, h3, h4, h5, h6 {
 	font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+
+.landing-page{
+
+   
 }
 
 .lead {
@@ -19,23 +26,25 @@ body, h1, h2, h3, h4, h5, h6 {
 	background: no-repeat center center;
 	background-size: cover;
 	text-align: center;
-	border-bottom: 1px solid #E7E7E7;
-	background: url(../img/back.jpg) no-repeat center bottom;
-	background-size:cover;
+	
 }
 
 .intro-message {
 	position: relative;
-	padding-top: 5%;
-	padding-bottom: 5%;
+	padding-top: 0%;
+	padding-bottom: 0%;
 }
 
 .intro-message > h1 {
-	visibility: hidden;
 	margin: 0;
 	font-size: 5em;
 	color: #888;
 }
+
+.intro-message .btn-default {
+	
+}
+
 
 .books{
 padding-top: 50px;
@@ -43,7 +52,7 @@ padding-top: 50px;
 }
 
 .intro-divider {
-	width: 400px;
+	width: 100px;
 	border-top: 1px solid #f8f8f8;
 	border-bottom: 1px solid rgba(0, 0, 0, 0.2);
 }
@@ -105,7 +114,7 @@ padding-top: 50px;
 }
 
 .banner {
-	padding:30px 0;
+	padding:15 0;
 	color: #888;
 	background-size: cover;
 }
@@ -150,16 +159,19 @@ padding-top: 50px;
 }
 
 footer {
-	background-color: #f8f8f8;
-	padding: 50px 0;
+   margin: auto;
+   bottom:0;
 }
 
+
+
+
 p.copyright {
-	margin: 15px 0 0;
+	float:right; ;
+	margin: auto auto;
 }
 
 .connection {
-	display: none;
 	max-width: 200px;
 	margin-left: auto;
     margin-right: auto;
