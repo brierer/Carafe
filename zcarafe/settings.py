@@ -1,5 +1,9 @@
-# Django settings for zcarafe project.
-
+import os
+import django
+# calculated paths for django and the site
+# used as starting points for various other paths
+DJANGO_ROOT = os.path.dirname(os.path.realpath(django.__file__))
+SITE_ROOT = os.path.dirname(os.path.realpath(__file__))
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
@@ -78,7 +82,7 @@ STATIC_URL = '/static/'
 
 # Additional locations of static files
 STATICFILES_DIRS = (
-    "/home/raph/python/zcarafe/zcarafe/static/",
+    os.path.join(SITE_ROOT, "static"),
     # Put strings here, like "/home/html/static" or "C:/www/django/static".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
@@ -120,7 +124,7 @@ SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 WSGI_APPLICATION = 'zcarafe.wsgi.application'
 
 TEMPLATE_DIRS = (
-    "/home/raph/python/zcarafe/templates"
+    os.path.join(SITE_ROOT, "../templates")
 )
 SOUTH_TESTS_MIGRATE = False
 
