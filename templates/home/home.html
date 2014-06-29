@@ -33,14 +33,33 @@
             <span class="icon-bar"></span>
           </button>
           <a class="navbar-brand">Carafe</a>
+          <ul class="nav navbar-nav">
+            <li><a href="/start/">Features</a></li>
+            <li><a href="/start/">Pricing</a></li>
+            <li><a href="/profil/n@n.com">Demo</a></li>
+            <li><a href="/start/">Video <i class="fa fa-play-circle-o  fa-fw"></i></a></li>
+            <li class="dropdown">
+                    <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                       More <i class="fa fa-caret-down"></i>
+                    </a>
+                    <ul class="dropdown-menu dropdown-user">
+                        <li><a>Contact</a>
+                        </li>
+                        <li><a href="#">Blog</a>
+                        </li>
+                        <li><a href="#">Tutorial</a>
+                        </li>
+                    </ul>
+                    <!-- /.dropdown-user -->
+                </li>
+            </ul>
         </div>
 
         <!-- Collect the nav links, forms, and other content for toggling -->
         <div class="collapse navbar-collapse navbar-right navbar-ex1-collapse">
           <ul class="nav navbar-nav">
             <li> <button class="btn btn-success navbar-btn" disabled="disabled">Sign Up Free</button><li>
-            <li><a href="/start/">Why use Carafe</a></li>
-            <li><a href="/profil/n@n.com">Demo</a></li>
+
                <li class="dropdown">
                     <a class="dropdown-toggle" data-toggle="dropdown" href="#">
                         <i class="fa fa-user fa-fw"></i>  <i class="fa fa-caret-down"></i>
@@ -70,7 +89,6 @@
             <div class="intro-message">
               <h3><img src="{{ STATIC_URL }}img/carafeGrey.png" height="200" width="200"></h3>
               <h3>Analyse data. Share results.</h3>
-           
               <hr class="intro-divider connection">
               <div class="connection">
                 <form method="post" action="." class="form-horizontal" role="form">
