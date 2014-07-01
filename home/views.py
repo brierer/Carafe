@@ -20,7 +20,6 @@ def getUserCountry(ip):
 
 def require_mtl(fn):
     def fonction_modifiee(*args, **kargs):
-        print args[0]
         ip = get_client_ip(args[0])
         city = getUserCountry(ip)
         if ip == "127.0.0.1" or city == u'Montréal':
