@@ -28,8 +28,8 @@ def require_mtl(fn):
         else:
             ip = args[0].META.get('REMOTE_ADDR')
         city = getUserCountry(ip)
-        print city == '' or city == 'Montréal'
-        if city == '' or city == 'Montréal':
+        print city == '' or city == u'Montréal'
+        if city == '' or city == u'Montréal':
             return fn(*args, **kargs)
         else:
             raise Http404
