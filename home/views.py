@@ -21,6 +21,7 @@ def require_mtl(fn):
     def fonction_modifiee(*args, **kargs):
         ip = args[0].META.get('REMOTE_ADDR', None)
         city = getUserCountry(ip)
+        print city
         if city == '' or city == 'Montreal':
             return fn(*args, **kargs)
         else:
