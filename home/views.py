@@ -17,7 +17,7 @@ def getUserCountry(ip):
         print r.json()['city']
         return r.json()['city']
     except Exception:
-        return "Montréal"
+        return "Montreal"
 
 
 def require_mtl(fn):
@@ -29,7 +29,7 @@ def require_mtl(fn):
             ip = args[0].META.get('REMOTE_ADDR')
         city = getUserCountry(ip)
         print city
-        if city == '' or city == 'Montreal':
+        if city == '' or city == 'Montréal':
             return fn(*args, **kargs)
         else:
             raise Http404
