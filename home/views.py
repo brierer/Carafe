@@ -13,8 +13,6 @@ def getUserCountry(ip):
     try:
         url = "https://freegeoip.net/json/" + ip
         r = requests.get(url)
-        print ip
-        print r.json()['city']
         return r.json()['city']
     except Exception:
         return "Montreal"
@@ -22,18 +20,14 @@ def getUserCountry(ip):
 
 def require_mtl(fn):
     def fonction_modifiee(*args, **kargs):
-        x_forwarded_for = args[0].META.get('HTTP_X_REAL_IP')
-        if x_forwarded_for:
-            ip = x_forwarded_for.split(',')[0]
-        else:
-            ip = args[0].META.get('REMOTE_ADDR')
+        ip = get_client_ip(args[0])
         city = getUserCountry(ip)
-        print city == '' or city == u'Montréal'
-        if city == '' or city == u'Montréal':
+        if u'Montréal':
             return fn(*args, **kargs)
         else:
             raise Http404
     return fonction_modifiee
+# Url Function
 # Url Function
 
 
@@ -80,7 +74,6 @@ def log(request):
 def deconnexion(request):
     logout(request)
     return redirect('', locals())
-
 
 
 def get_client_ip(request):

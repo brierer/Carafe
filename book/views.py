@@ -25,7 +25,7 @@ def getUserCountry(ip):
 
 def require_mtl(fn):
     def fonction_modifiee(*args, **kargs):
-        ip = args[0].META.get('REMOTE_ADDR', None)
+        ip = get_client_ip(args[0])
         city = getUserCountry(ip)
         if city == '' or city == 'Montreal':
             return fn(*args, **kargs)
@@ -50,7 +50,7 @@ def watch_book(request, book_id):
     return render(request, 'book/watch.html',
                   get_book(request, book_id, True))
 
-
+@require_mtl
 @require_POST
 def create_book(request):
     form = CreateBookForm(request.POST)
@@ -65,7 +65,7 @@ def create_book(request):
         errors = form.errors
         return render(request, 'profil/page.html', locals())
 
-
+@require_mtl
 class UpdateBook(UpdateView):
     model = Book
     form_class = BookForm
@@ -125,8 +125,9 @@ def require_permission_book(user, book):
         raise Http404
 
 
+
 def get_client_ip(request):
-    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    x_forwarded_for = request.META.get('HTTP_X_REAL_IP')
     if x_forwarded_for:
         ip = x_forwarded_for.split(',')[0]
     else:
