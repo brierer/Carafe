@@ -36,32 +36,36 @@
     </div>    
     {% endblock %}
     <!-- JavaScript -->
-    <script src="{{ STATIC_URL }}js/jquery-1.10.2.js"></script>
-    <script src="{{ STATIC_URL }}js/jquery-ui.js"></script>
-    <script src="{{ STATIC_URL }}js/esprima.js"></script>
-    <script src="{{ STATIC_URL }}js/jquery.handsontable.full.js"></script>
-    <script src="{{ STATIC_URL }}js/vendor/d3.min.js"></script> 
-    <script src="{{ STATIC_URL }}js/vendor/d3.layout.min.js"></script> 
-    <script src="{{ STATIC_URL }}js/rickshaw.js"></script> 
-    <script src="{{ STATIC_URL }}js/bootstrap.js"></script>
-    <script src="{{ STATIC_URL }}js/sb-admin.js"></script>
-    <script src="{{ STATIC_URL }}js/codemirror.js"></script>
-    <script src="{{ STATIC_URL }}js/haskell.js"></script>
-    <script src="{{ STATIC_URL }}js/eqobj.js"></script>
-    <script src="{{ STATIC_URL }}js/evaluator.js"></script>
-    <script src="{{ STATIC_URL }}js/widget.js"></script>
-    <script src="{{ STATIC_URL }}js/workspace.js"></script>
-    <script src="{{ STATIC_URL }}js/validator.js"></script>
-  
-
-      <!-- Core Scripts - Include with every page -->
-    <script src="{{ STATIC_URL }}js/plugins/metisMenu/jquery.metisMenu.js"></script>
-
-    <!-- Page-Level Plugin Scripts - Dashboard -->
-    <script src="{{ STATIC_URL }}js/plugins/morris/raphael-2.1.0.min.js"></script>
-    <script src="{{ STATIC_URL }}js/plugins/morris/morris.js"></script>
-
-    <!-- Page-Level Demo Scripts - Dashboard - Use for reference -->
-    <script src="{{ STATIC_URL }}js/demo/dashboard-demo.js"></script>
+<!-- JavaScript -->
+    <script src="{{ STATIC_URL }}js/lib/jquery-1.10.2.js"></script>
+    <script src="{{ STATIC_URL }}js/lib/jquery-ui.js"></script>
+    <script src="{{ STATIC_URL }}js/lib/bootstrap.js"></script>
+    <!-- Mock -->
+    <script src="{{ STATIC_URL }}js/jquery-mockjax/jquery.mockjax.js"></script>
+    <script src="{{ STATIC_URL }}js/mock.js"></script>
+<!-- External lib -->
+    <!-- Handsontable is a minimalistic Excel-like data grid editor for JavaScript  -->
+    <script src="{{ STATIC_URL }}js/lib/jquery.handsontable.full.js"></script>
+    <!-- D3.js is a JavaScript library for manipulating documents based on data -->
+    <script src="{{ STATIC_URL }}js/lib/vendor/d3.min.js"></script> 
+    <script src="{{ STATIC_URL }}js/lib/vendor/d3.layout.min.js"></script> 
+    <!-- Rickshaw is a JavaScript toolkit for creating interactive time series graphs  -->
+    <script src="{{ STATIC_URL }}js/lib/rickshaw.js"></script> 
+    <!-- CodeMirror is a versatile text editor implemented in JavaScript for the browser -->
+    <script src="{{ STATIC_URL }}js/lib/codemirror.js"></script>
+<!-- Workspace lib -->
+    <!-- CodeMirror scheme to be apply on eqs form -->
+    <script src="{{ STATIC_URL }}js/workspace/carafe-scheme.js"></script>
+    <!-- Eqs in big js obj and functions to change thems -->
+    <script src="{{ STATIC_URL }}js/workspace/eqobj.js"></script>
+    <!-- Back-end communication -->
+    <script src="{{ STATIC_URL }}js/workspace/evaluator.js"></script>
+    <!-- All the widget to be display in the dashboard -->
+    <script src="{{ STATIC_URL }}js/workspace/widget.js"></script>
+    <!-- Main/Initial functions -->
+    <script src="{{ STATIC_URL }}js/workspace/workspace.js"></script>
+    <!-- Validator of the side bar functions -->
+    <script src="{{ STATIC_URL }}js/workspace/validator.js"></script>
+ 
 </body>
 </html>

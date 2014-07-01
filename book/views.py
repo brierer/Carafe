@@ -11,10 +11,31 @@ from django.views.generic import UpdateView
 from django.views.decorators.http import require_GET, require_POST
 from guardian.shortcuts import assign_perm
 import json
+import requests
 
 
+def getUserCountry(ip):
+    try:
+        url = "https://freegeoip.net/json/" + ip
+        r = requests.get(url)
+        return r.json()['city']
+    except Exception:
+        return "Montreal"
+
+
+def require_mtl(fn):
+    def fonction_modifiee(*args, **kargs):
+        ip = args[0].META.get('REMOTE_ADDR', None)
+        city = getUserCountry(ip)
+        if city == '' or city == 'Montreal':
+            return fn(*args, **kargs)
+        else:
+            raise Http404
+    return fonction_modifiee
 # Url Function
 
+
+@require_mtl
 @require_GET
 def work_book(request, book_id):
     return render(request,
@@ -23,7 +44,7 @@ def work_book(request, book_id):
                            book_id,
                            request.GET.get('read', '') == 'true'))
 
-
+@require_mtl
 @require_GET
 def watch_book(request, book_id):
     return render(request, 'book/watch.html',
@@ -75,6 +96,7 @@ def get_calc(request):
         res = get_result(form_id)
     else:
         res = {u'result': u'error', u'message': u'Invalid Request'}
+    print json.dumps(res)
     return HttpResponse(json.dumps(res), content_type="application/json")
 
 # subFunction

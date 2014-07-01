@@ -22,16 +22,17 @@ function initPollingGetCalcResult() {
 }
 
 function pollingServerCalcGetResult(nbTry) {
-	if (nbTry < 50) {
+	console.log("ag");
+	if (nbTry < 5) {
 		var id_form = $("#id_form_id").serialize();
 		var id_book = $("#id_book_id").serialize();
-		$.get('getCalcResult/?' + id_form, function(data, status) {
+		$.getJSON('getCalcResult/?' + id_form, function(r) {
 			var now = new Date().getTime();
 			var timesRun = nbTry;
 			console.log('Action ' + (timesRun + 1) + ' started ' + (now - startTime) + 'ms after script start');
-			if (data != null) {
-				eqWrapper.setEQ(data.parse)
-				displayData(data);
+			if (r.data != null) {
+				eqWrapper.setEQ(r.data.parse)
+				displayData(r.data);
 				isCalculatingWaiting = false;
 			} else {
 				setTimeout(function() {

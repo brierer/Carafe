@@ -8,6 +8,28 @@ from profil.forms import ConnexionForm
 from django.shortcuts import redirect
 
 
+def getUserCountry(ip):
+    try:
+        url = "https://freegeoip.net/json/" + ip
+        r = requests.get(url)
+        return r.json()['city']
+    except Exception:
+        return "Montreal"
+
+
+def require_mtl(fn):
+    def fonction_modifiee(*args, **kargs):
+        ip = args[0].META.get('REMOTE_ADDR', None)
+        city = getUserCountry(ip)
+        if city == '' or city == 'Montreal':
+            return fn(*args, **kargs)
+        else:
+            raise Http404
+    return fonction_modifiee
+# Url Function
+
+
+@require_mtl
 def home(request):
     error = False
     if request.user.is_authenticated():
@@ -35,14 +57,17 @@ def home(request):
     return render(request, 'home/home.html', locals())
 
 
+@require_mtl
 def start(request):
     return render(request, 'home/start.html', locals())
 
 
+@require_mtl
 def log(request):
     return render(request, 'home/login.html', locals())
 
 
+@require_mtl
 def deconnexion(request):
     logout(request)
     return redirect('', locals())
