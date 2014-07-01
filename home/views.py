@@ -6,12 +6,15 @@ from django.contrib.auth import authenticate
 from profil.models import Profil
 from profil.forms import ConnexionForm
 from django.shortcuts import redirect
+import requests
 
 
 def getUserCountry(ip):
     try:
         url = "https://freegeoip.net/json/" + ip
         r = requests.get(url)
+        print ip
+        print r.json()['city']
         return r.json()['city']
     except Exception:
         return "Montreal"
