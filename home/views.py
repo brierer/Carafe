@@ -39,6 +39,7 @@ def require_mtl(fn):
 
 @require_mtl
 def home(request):
+    print get_client_ip(request)
     error = False
     if request.user.is_authenticated():
         return redirect('/profil/')
@@ -79,3 +80,13 @@ def log(request):
 def deconnexion(request):
     logout(request)
     return redirect('', locals())
+
+
+
+def get_client_ip(request):
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip
