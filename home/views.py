@@ -17,7 +17,7 @@ def getUserCountry(ip):
         print r.json()['city']
         return r.json()['city']
     except Exception:
-        return "Montreal"
+        return "Montréal"
 
 
 def require_mtl(fn):
