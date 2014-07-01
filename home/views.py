@@ -22,11 +22,11 @@ def getUserCountry(ip):
 
 def require_mtl(fn):
     def fonction_modifiee(*args, **kargs):
-        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        x_forwarded_for = args[0].META.get('HTTP_X_FORWARDED_FOR')
         if x_forwarded_for:
             ip = x_forwarded_for.split(',')[0]
         else:
-            ip = request.META.get('REMOTE_ADDR')
+            ip = args[0].META.get('REMOTE_ADDR')
         city = getUserCountry(ip)
         print city
         if city == '' or city == 'Montreal':
