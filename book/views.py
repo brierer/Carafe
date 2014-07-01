@@ -25,9 +25,10 @@ def getUserCountry(ip):
 
 def require_mtl(fn):
     def fonction_modifiee(*args, **kargs):
+        print args[0]
         ip = get_client_ip(args[0])
         city = getUserCountry(ip)
-        if city == '' or city == 'Montreal':
+        if ip == "127.0.0.1" or city == u'Montréal':
             return fn(*args, **kargs)
         else:
             raise Http404
@@ -44,11 +45,13 @@ def work_book(request, book_id):
                            book_id,
                            request.GET.get('read', '') == 'true'))
 
+
 @require_mtl
 @require_GET
 def watch_book(request, book_id):
     return render(request, 'book/watch.html',
                   get_book(request, book_id, True))
+
 
 @require_mtl
 @require_POST
@@ -65,7 +68,7 @@ def create_book(request):
         errors = form.errors
         return render(request, 'profil/page.html', locals())
 
-@require_mtl
+
 class UpdateBook(UpdateView):
     model = Book
     form_class = BookForm
@@ -123,7 +126,6 @@ def get_book_or_404(user, book_id):
 def require_permission_book(user, book):
     if book.user_has_not_perm(user):
         raise Http404
-
 
 
 def get_client_ip(request):

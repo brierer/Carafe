@@ -20,20 +20,19 @@ def getUserCountry(ip):
 
 def require_mtl(fn):
     def fonction_modifiee(*args, **kargs):
+        print args[0]
         ip = get_client_ip(args[0])
         city = getUserCountry(ip)
-        if u'Montréal':
+        if ip == "127.0.0.1" or city == u'Montréal':
             return fn(*args, **kargs)
         else:
             raise Http404
     return fonction_modifiee
 # Url Function
-# Url Function
 
 
 @require_mtl
 def home(request):
-    print get_client_ip(request)
     error = False
     if request.user.is_authenticated():
         return redirect('/profil/')
