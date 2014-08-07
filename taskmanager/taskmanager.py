@@ -97,11 +97,6 @@ class Sender:
     class __OnlyOne:
 
         def __init__(self):
-         
-            url_str = os.environ.get(
-                'tiger.cloudamqp.com',
-                'amqp://vidvjemc:27f27zSadNC1KCEfEJoSrsSDP80Vbtrn@tiger.cloudamqp.com/vidvjemc')
-            self.url = urlparse.urlparse(url_str)
             self.params = pika.ConnectionParameters(
                 host='localhost', heartbeat_interval=1)
             self.connection = pika.BlockingConnection(parameters=self.params)

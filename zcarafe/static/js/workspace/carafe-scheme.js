@@ -1,3 +1,7 @@
+define([
+  "codemirror",
+], function() {
+
 CodeMirror.defineMode("haskell", function(_config, modeConfig) {
 
   function switchState(source, setState, f) {
@@ -250,3 +254,4 @@ CodeMirror.defineMode("haskell", function(_config, modeConfig) {
 });
 
 CodeMirror.defineMIME("text/x-haskell", "haskell");
+});

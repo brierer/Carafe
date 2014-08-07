@@ -98,7 +98,6 @@ def get_calc(request):
         res = get_result(form_id)
     else:
         res = {u'result': u'error', u'message': u'Invalid Request'}
-    print json.dumps(res)
     return HttpResponse(json.dumps(res), content_type="application/json")
 
 # subFunction

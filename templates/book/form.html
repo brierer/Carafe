@@ -1,17 +1,18 @@
-    <br/>
-    <form id="editor" method=post action="{% url "book.views.work_book" book_id %}">
-                {% csrf_token %}
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        <i class="fa fa-list-ul fa-fw"></i>  Equations
-                        <div class="pull-right">
-                            <a id="btn_eval" class="btn_eval btn btn-danger btn-xs">GO!</a>
-                        </div>
-                     </div>
-                    {{ form.form_id }} 
-                    {{ form.book_id }} 
-                    {{ form.read_only }}
-                    <textarea id="id_equations" name="equations" class="form-control" >{{ form.equations.value }}</textarea>
-                </div>
-    </form>
-    
+
+<form id="editor" method=post action="/book/3">
+     {% csrf_token %}
+    <div class="panel panel-default">
+        {% verbatim %}
+        <div class="panel-heading">
+            <i class="fa fa-list-ul fa-fw"></i> Equations
+            <div class="pull-right">
+                <a id="btn_eval" ng-click="update()" class="btn_eval btn btn-warning btn-xs">GO!</a>
+            </div>
+        </div>
+        {% endverbatim %} {{ form.form_id }} {{ form.book_id }} {{ form.read_only }}
+        <textarea id="id_equations" name="equations" class="form-control">{{ form.equations.value }}
+
+        </textarea>
+       
+    </div>
+</form>

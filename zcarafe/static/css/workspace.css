@@ -1,95 +1,207 @@
 
-#id_equations{
-	border-radius: 0px 0px 0px 0px;
-	resize:vertical;
+#id_equations {
+
+    border-radius: 0px 0px 0px 0px;
+
+    resize: vertical;
+
 }
 
-#editor{
-	visibility: hidden;
+#editor {
+
+    visibility: hidden;
+
 }
 
+.input-selected {
 
-#invisible-wrapper{
-	position:absolute;
-	top: 40px;
-	width: 100%;
-	background-color: rgba(256,256,256,0.4);
-	visibility: hidden;
-	z-index: 100;
+    border-color: #66AFE9;
+
+    outline: 0px none;
+
+    box-shadow: 0px 1px 1px rgba(0, 0, 0, 0.075) inset, 0px 0px 8px rgba(102, 175, 233, 0.6);
+
 }
 
-    ::-moz-selection{
-    background-color:Transparent;
-    color:#000;
-    }
+#containment-wrapper {
 
-    ::selection {
-    background-color:Transparent;
-    color:#000;
-    }
+    list-style-type: none
 
-#containment-wrapper::-moz-selection,
-#containment-wrapper::selection {  }
+}
 
-#containment-wrapper{
-	z-index: 10;
+#invisible-wrapper {
+
+    position: absolute;
+
+    top: 40px;
+
+    width: 100%;
+
+    background-color: rgba(256, 256, 256, 0.4);
+
+    visibility: hidden;
+
+    z-index: 100;
+
+}
+
+::-moz-selection {
+
+    background-color: Transparent;
+
+    color: #000;
+
+}
+
+::selection {
+
+    background-color: Transparent;
+
+    color: #000;
+
+}
+
+#containment-wrapper::-moz-selection, #containment-wrapper::selection {} #containment-wrapper {
+
+    overflow-y: auto;
+
+    z-index: 10;
+
 }
 
 .table-container {
-	display: inline-block;
-	margin-right: 4px;
-	vertical-align:top;
+
+    display: inline-block;
+
+    margin-right: 4px;
+
+    vertical-align: top;
+
 }
 
 #chart {
-	position: relative;
-	left: 40px;
-	display: block;
+
+    position: relative;
+
+    left: 40px;
+
+    display: block;
+
 }
+
 #y_axis {
-	position: absolute;
-	top: 20px;
-	bottom: 0;
-	width: 40px;
-}
-#x_axis {
-	position: relative;
-	left: 40px;
-	height: 30px;
-}
 
-#dashboard{
-	position: relative;
-}
-
-
-
-.chart-title{
-	display: inline-block;
-	width: 100%;
-	text-align:center;
-}
-
-.chart-container{
-	display: inline-block;
-	overflow: hidden; 
-	position:relative;
-	margin-right: 4px;
-	padding: 0px 0px 0px 0px;
-	border-style:solid;
-	border-width:1px;
-	border-color: #ccc;
-}
-
-.chart{
-
-}
-
-#contextMenu {
     position: absolute;
-    display:none;
+
+    top: 20px;
+
+    bottom: 0;
+
+    width: 40px;
+
 }
 
-.hidden{
-	visibility: hidden;
+#x_axis {
+
+    position: relative;
+
+    left: 40px;
+
+    height: 30px;
+
+}
+
+#dashboard {
+
+    position: relative;
+
+}
+
+.chart-title {
+
+    display: inline-block;
+
+    width: 100%;
+
+    text-align: center;
+
+}
+
+.chart-container {
+
+    display: inline-block;
+
+    overflow: hidden;
+
+    position: relative;
+
+    margin-right: 4px;
+
+    padding: 0px 0px 0px 0px;
+
+    border-style: solid;
+
+    border-width: 1px;
+
+    border-color: #ccc;
+
+}
+
+.chart {} #contextMenu {
+
+    position: absolute;
+
+    display: none;
+
+}
+
+.hidden {
+
+    visibility: hidden;
+
+}
+
+.nod_msg {
+
+    color: #b94a48;
+
+}
+
+.generator-button {
+
+    padding: 0px
+
+}
+
+/**
+ * BootstrapValidator (http://bootstrapvalidator.com)
+ * The best jQuery plugin to validate form fields. Designed to use with Bootstrap 3
+ *
+ * @author      http://twitter.com/nghuuphuoc
+ * @copyright   (c) 2013 - 2014 Nguyen Huu Phuoc
+ * @license     MIT
+ */
+
+.bv-form .help-block {
+
+    margin-bottom: 0;
+
+}
+
+.bv-form .tooltip-inner {
+
+    text-align: left;
+
+}
+
+.nav-tabs li.bv-tab-success > a {
+
+    color: #3c763d;
+
+}
+
+.nav-tabs li.bv-tab-error > a {
+
+    color: #a94442;
+
 }
