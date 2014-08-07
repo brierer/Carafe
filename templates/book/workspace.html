@@ -154,12 +154,10 @@
     <!-- /.navbar-static-side -->
 
     <div id="page-wrapper" ng-controller="WidgetController">
-        <br/>
-        <div ng-if="message!=null && message!=''" class="alert alert-warning">
+        <br/>{% endverbatim %} {% include "book/form.html" %} {% verbatim %}
+        <div ng-if="message!=null && message!=''" class="alert alert-success">
             {{message}}
         </div>
-        {% endverbatim %} {% include "book/form.html" %} {% verbatim %}
-
         <div id="dashboard" class="panel panel-default">
             <div class="panel-heading">
                 <i class="fa fa-dashboard fa-fw"></i> Dashboard
