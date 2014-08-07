@@ -30,7 +30,6 @@ def require_mtl(fn):
 # Url Function
 
 
-@require_mtl
 def home(request):
     error = False
     if request.user.is_authenticated():
