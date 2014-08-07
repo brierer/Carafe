@@ -11,7 +11,7 @@ import requests
 
 def getUserCountry(ip):
     try:
-        url = "http://www.telize.com/geoip" + ip
+        url = "http://www.telize.com/geoip/" + ip
         r = requests.get(url)
         return r.json()['region']
     except Exception:
