@@ -16,18 +16,18 @@ import requests
 
 def getUserCountry(ip):
     try:
-        url = "https://freegeoip.net/json/" + ip
+        url = "http://www.telize.com/geoip" + ip
         r = requests.get(url)
-        return r.json()['city']
+        return r.json()['region']
     except Exception:
-        return "Montreal"
+        return "Quebec"
 
 
 def require_mtl(fn):
     def fonction_modifiee(*args, **kargs):
         ip = get_client_ip(args[0])
         city = getUserCountry(ip)
-        if ip == "127.0.0.1" or city == u'Montréal':
+        if ip == "127.0.0.1" or city == u'Quebec':
             return fn(*args, **kargs)
         else:
             raise Http404
