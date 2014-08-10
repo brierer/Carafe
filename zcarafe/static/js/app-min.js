@@ -43703,7 +43703,7 @@ define('workspace/eqobj',["./mquery"], function(mquery) {
             var valueToChange = M(findEQ(val.f.name).v);
             changeVariable(value, valueToChange);
         } else {
-            changeAtomicValue(value, exp.val())
+            changeAtomic(value, exp.val())
         }
     }
 
@@ -43775,10 +43775,7 @@ define('workspace/eqobj',["./mquery"], function(mquery) {
             var valueToChange = M(findEQ(val.f.name).v);
             removeCol(col, valueToChange);
         } else {
-            console.log(col)
-            console.log(JSON.stringify(val))
             val.v.a.splice(col, 1);
-            console.log(JSON.stringify(val))
         }
     }
 
@@ -43822,7 +43819,7 @@ define('workspace/eqobj',["./mquery"], function(mquery) {
     }
 
     function addCol(exp, col) {
-        exp.val().v.a.splice(col, 0, createArray());
+        exp.val().v.a.splice(col, 0, createArray([]));
     }
 
     function addAtomicValue(hook, subeqObj) {
@@ -43864,7 +43861,6 @@ define('workspace/eqobj',["./mquery"], function(mquery) {
         eqs = eqWrapper.getEQ();
         eqs[eqs.length - 1][1].s2 = "\n";
         eqs.push([name, value])
-        console.log(value)
         return value
     }
 
@@ -43899,7 +43895,7 @@ define('workspace/eqobj',["./mquery"], function(mquery) {
     function createMatrix(col, row) {
         var arr = []
         for (var i = 0; i < col; i++) {
-            arr.push(createArray(row));
+            arr.push(createArray([]));
         }
         var v = {
             a: arr
@@ -43911,8 +43907,8 @@ define('workspace/eqobj',["./mquery"], function(mquery) {
         }
     }
 
-    function createArray(nb) {
-        var arr = []
+    function createArray(val) {
+        var arr = val
         var v = {
             a: arr
         }
@@ -43923,11 +43919,11 @@ define('workspace/eqobj',["./mquery"], function(mquery) {
         }
     }
 
-    function createObject() {
+    function createObject(attr) {
         return {
             s1: "",
             v: {
-                o: []
+                o: attr
             },
             s2: ""
         }
@@ -43937,6 +43933,7 @@ define('workspace/eqobj',["./mquery"], function(mquery) {
         eqWrapper.getEQ()[0][1].v.f.arg[0].v.a.push(createFunction(eq, []));
     }
 
+    
     return {
         eqWrapper: eqWrapper,
         addOrChangeValue: addOrChangeValue,
@@ -44036,7 +44033,7 @@ define('workspace/handsontable-fabric',[
             afterCreateCol: afterCreateCol,
             afterSelection: function(r, c, r1, c2) {
                 var hook = [r, c, r1, c2]
-                if (r1 < this.countRows() - 2) {
+                if (r1 < this.countRows() - 2 || r!=0) {
                     data.fnAfterChange("select(" + table.prettyData() + "," + hook + ")")
                 } else {
                     data.fnAfterChange("col(" + table.prettyData() + "," + c + ")")
@@ -44068,19 +44065,10 @@ define('workspace/handsontable-fabric',[
                 }
             },
             afterGetColHeader: function(col, TH) {
-                var instance = this;
-
-                var $button = $(buildButton(col));
-                $button.click(function(event) {
-                    var num = Number($button.attr("nb"))
-                    instance.selectCell(0, num, instance.countRows() - 2, num, true)
-                   // container.find("input:not(:eq(" + col + "))").attr('checked', false)
+                var instance = this
+                $(TH.firstChild).click(function(event) {
+                    instance.selectCell(0, col, instance.countRows() - 2, col, true)
                 });
-
-
-                TH.firstChild.appendChild($button[0]);
-
-                //TH.appendChild(menu[0]);
             },
         }
 
@@ -44474,7 +44462,7 @@ define('workspace/widget',[
                     var preText = editor.getDoc().getValue()
                     $('#invisible-wrapper').css("visibility", "visible");
                     if (message.fn != null) message.fn("Please, reload the page with GO!")
-                    editor.getDoc().setValue(preText + value)
+                    editor.getDoc().setValue(preText + "\n" + value)
                 }
 
                 function setWidget() {
@@ -44533,13 +44521,11 @@ define('workspace/widget',[
                 function addTable(name, nbcol) {
                     var nbCol = parseInt(nbcol)
                     var arr = new Array(nbCol);
-
                     for (var a = []; a.length < 1; a.push(arr.slice(0)));
-
-
-                    var f = eqobj.createFunction("table", [eqobj.createMatrix(nbCol, 0), eqobj.createObject()])
-
+                    var f = eqobj.createFunction("table", [eqobj.createFunction(name + "data", []), eqobj.createObject([])])
                     var eqs = eqobj.addEq(name, f)
+                    
+                    eqobj.addEq(name + "data", eqobj.createMatrix(nbCol, 0));
                     eqobj.addShow(name)
                     displayOneTable(table.Table.fromArray(eqs, a, null))
                     setWidget();
@@ -44548,9 +44534,17 @@ define('workspace/widget',[
                 function addTableWithData(name, data, header) {
                     var a = data
                     var nbCol = data[0].length
-                    var f = eqobj.createFunction("table", [eqobj.createMatrix(nbCol, 0), eqobj.createObject()])
-
+                    var colName = []
+                    if (header != null) {
+                        for (var i = 0; a < header; a++) {
+                            colName.push(eqobj.createString(header[i]))
+                        }
+                    }
+                    var col = eqobj.createObject([])
+                    var f = eqobj.createFunction("table", [eqobj.createFunction(name + "data", []), col])
                     var eqs = eqobj.addEq(name, f)
+
+                    eqobj.addEq(name + "data", eqobj.createMatrix(nbCol, 0));
                     eqobj.addShow(name)
                     displayOneTable(table.Table.fromArray(eqs, a, null, header))
                     setWidget();
@@ -44591,12 +44585,11 @@ define('workspace/widget',[
                     $scope.WidgetService = WidgetService
                     WidgetService.message.fn = function(msg) {
                         $scope.message = msg
-                        $scope.$apply()
                     }
                     $scope.update = function() {
                         $scope.WidgetService.editor.save()
+                        $scope.message = ""
                         evaluator.eqEvaluation($scope.updateData)
-
                     }
 
                     $scope.updateData = function(data) {
@@ -44739,15 +44732,13 @@ define('workspace/fnList',["./widget"], function(widget) {
                 }
             }),
             SubList("Stats", [FunctionCreator({
-                'title': 'sum',
+                'title': 'descriptive',
                 'argument': [{
-                    'title': 'x',
-                    'validation': validations.v_float
-                }, {
-                    'title': 'y',
-                    'validation': validations.v_float
-                }],
-                'callback': function() {
+                    'title': 'data',
+                    'validation': null
+                },],
+                'callback': function(fn , widget) {
+                    widget.addToEditorText(defaut_fn("descriptive", fn))
                 }
             })])
         ])
