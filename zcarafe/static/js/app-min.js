@@ -17771,6 +17771,567 @@ if (typeof jQuery === 'undefined') { throw new Error('Bootstrap\'s JavaScript re
 
 define("bootstrap", ["jquery"], function(){});
 
+/*
+ * angular-hotkeys
+ *
+ * Automatic keyboard shortcuts for your angular apps
+ *
+ * (c) 2014 Wes Cruver
+ * License: MIT
+ */
+
+(function() {
+
+  
+
+  angular.module('cfp.hotkeys', []).provider('hotkeys', function() {
+
+    /**
+     * Configurable setting to disable the cheatsheet entirely
+     * @type {Boolean}
+     */
+    this.includeCheatSheet = true;
+
+    /**
+     * Configurable setting for the cheat sheet title
+     * @type {String}
+     */
+
+    this.templateTitle = 'Keyboard Shortcuts:';
+
+    /**
+     * Cheat sheet template in the event you want to totally customize it.
+     * @type {String}
+     */
+    this.template = '<div class="cfp-hotkeys-container fade" ng-class="{in: helpVisible}" style="display: none;"><div class="cfp-hotkeys">' +
+                      '<h4 class="cfp-hotkeys-title">{{ title }}</h4>' +
+                      '<table><tbody>' +
+                        '<tr ng-repeat="hotkey in hotkeys | filter:{ description: \'!$$undefined$$\' }">' +
+                          '<td class="cfp-hotkeys-keys">' +
+                            '<span ng-repeat="key in hotkey.format() track by $index" class="cfp-hotkeys-key">{{ key }}</span>' +
+                          '</td>' +
+                          '<td class="cfp-hotkeys-text">{{ hotkey.description }}</td>' +
+                        '</tr>' +
+                      '</tbody></table>' +
+                      '<div class="cfp-hotkeys-close" ng-click="toggleCheatSheet()">×</div>' +
+                    '</div></div>';
+
+    /**
+     * Configurable setting for the cheat sheet hotkey
+     * @type {String}
+     */
+    this.cheatSheetHotkey = '?';
+
+    /**
+     * Configurable setting for the cheat sheet description
+     * @type {String}
+     */
+    this.cheatSheetDescription = 'Show / hide this help menu';
+
+    this.$get = function ($rootElement, $rootScope, $compile, $window, $document) {
+
+      // monkeypatch Mousetrap's stopCallback() function
+      // this version doesn't return true when the element is an INPUT, SELECT, or TEXTAREA
+      // (instead we will perform this check per-key in the _add() method)
+      Mousetrap.stopCallback = function(event, element) {
+        // if the element has the class "mousetrap" then no need to stop
+        if ((' ' + element.className + ' ').indexOf(' mousetrap ') > -1) {
+          return false;
+        }
+
+        return (element.contentEditable && element.contentEditable == 'true');
+      };
+
+      /**
+       * Convert strings like cmd into symbols like ⌘
+       * @param  {String} combo Key combination, e.g. 'mod+f'
+       * @return {String}       The key combination with symbols
+       */
+      function symbolize (combo) {
+        var map = {
+          command   : '⌘',
+          shift     : '⇧',
+          left      : '←',
+          right     : '→',
+          up        : '↑',
+          down      : '↓',
+          'return'  : '↩',
+          backspace : '⌫'
+        };
+        combo = combo.split('+');
+
+        for (var i = 0; i < combo.length; i++) {
+          // try to resolve command / ctrl based on OS:
+          if (combo[i] === 'mod') {
+            if ($window.navigator && $window.navigator.platform.indexOf('Mac') >=0 ) {
+              combo[i] = 'command';
+            } else {
+              combo[i] = 'ctrl';
+            }
+          }
+
+          combo[i] = map[combo[i]] || combo[i];
+        }
+
+        return combo.join(' + ');
+      }
+
+      /**
+       * Hotkey object used internally for consistency
+       *
+       * @param {array}    combo       The keycombo. it's an array to support multiple combos
+       * @param {String}   description Description for the keycombo
+       * @param {Function} callback    function to execute when keycombo pressed
+       * @param {string}   action      the type of event to listen for (for mousetrap)
+       * @param {array}    allowIn     an array of tag names to allow this combo in ('INPUT', 'SELECT', and/or 'TEXTAREA')
+       * @param {Boolean}  persistent  Whether the hotkey persists navigation events
+       */
+      function Hotkey (combo, description, callback, action, allowIn, persistent) {
+        // TODO: Check that the values are sane because we could
+        // be trying to instantiate a new Hotkey with outside dev's
+        // supplied values
+
+        this.combo = combo instanceof Array ? combo : [combo];
+        this.description = description;
+        this.callback = callback;
+        this.action = action;
+        this.allowIn = allowIn;
+        this.persistent = persistent;
+      }
+
+      /**
+       * Helper method to format (symbolize) the key combo for display
+       *
+       * @return {[Array]} An array of the key combination sequence
+       *   for example: "command+g c i" becomes ["⌘ + g", "c", "i"]
+       *
+       * TODO: this gets called a lot.  We should cache the result
+       */
+      Hotkey.prototype.format = function() {
+
+        // Don't show all the possible key combos, just the first one.  Not sure
+        // of usecase here, so open a ticket if my assumptions are wrong
+        var combo = this.combo[0];
+
+        var sequence = combo.split(/[\s]/);
+        for (var i = 0; i < sequence.length; i++) {
+          sequence[i] = symbolize(sequence[i]);
+        }
+
+        return sequence;
+      };
+
+      /**
+       * A new scope used internally for the cheatsheet
+       * @type {$rootScope.Scope}
+       */
+      var scope = $rootScope.$new();
+
+      /**
+       * Holds an array of Hotkey objects currently bound
+       * @type {Array}
+       */
+      scope.hotkeys = [];
+
+      /**
+       * Contains the state of the help's visibility
+       * @type {Boolean}
+       */
+      scope.helpVisible = false;
+
+      /**
+       * Holds the title string for the help menu
+       * @type {String}
+       */
+      scope.title = this.templateTitle;
+
+      /**
+       * Expose toggleCheatSheet to hotkeys scope so we can call it using
+       * ng-click from the template
+       * @type {function}
+       */
+      scope.toggleCheatSheet = toggleCheatSheet;
+
+
+      /**
+       * Holds references to the different scopes that have bound hotkeys
+       * attached.  This is useful to catch when the scopes are `$destroy`d and
+       * then automatically unbind the hotkey.
+       *
+       * @type {Array}
+       */
+      var boundScopes = [];
+
+
+      $rootScope.$on('$routeChangeSuccess', function (event, route) {
+        purgeHotkeys();
+
+        if (route && route.hotkeys) {
+          angular.forEach(route.hotkeys, function (hotkey) {
+            // a string was given, which implies this is a function that is to be
+            // $eval()'d within that controller's scope
+            // TODO: hotkey here is super confusing.  sometimes a function (that gets turned into an array), sometimes a string
+            var callback = hotkey[2];
+            if (typeof(callback) === 'string' || callback instanceof String) {
+              hotkey[2] = [callback, route];
+            }
+
+            // todo: perform check to make sure not already defined:
+            // this came from a route, so it's likely not meant to be persistent
+            hotkey[5] = false;
+            _add.apply(this, hotkey);
+          });
+        }
+      });
+
+
+      // Auto-create a help menu:
+      if (this.includeCheatSheet) {
+        var document = $document[0];
+        var element = $rootElement[0];
+        var helpMenu = angular.element(this.template);
+        _add(this.cheatSheetHotkey, this.cheatSheetDescription, toggleCheatSheet);
+
+        // If $rootElement is document or documentElement, then body must be used
+        if (element === document || element === document.documentElement) {
+          element = document.body;
+        }
+
+        angular.element(element).append($compile(helpMenu)(scope));
+      }
+
+
+      /**
+       * Purges all non-persistent hotkeys (such as those defined in routes)
+       *
+       * Without this, the same hotkey would get recreated everytime
+       * the route is accessed.
+       */
+      function purgeHotkeys() {
+        var i = scope.hotkeys.length;
+        while (i--) {
+          var hotkey = scope.hotkeys[i];
+          if (hotkey && !hotkey.persistent) {
+            _del(hotkey);
+          }
+        }
+      }
+
+      /**
+       * Toggles the help menu element's visiblity
+       */
+      var previousEsc = false;
+
+      function toggleCheatSheet() {
+        scope.helpVisible = !scope.helpVisible;
+
+        // Bind to esc to remove the cheat sheet.  Ideally, this would be done
+        // as a directive in the template, but that would create a nasty
+        // circular dependency issue that I don't feel like sorting out.
+        if (scope.helpVisible) {
+          previousEsc = _get('esc');
+          _del('esc');
+
+          // Here's an odd way to do this: we're going to use the original
+          // description of the hotkey on the cheat sheet so that it shows up.
+          // without it, no entry for esc will ever show up (#22)
+          _add('esc', previousEsc.description, toggleCheatSheet);
+        } else {
+          _del('esc');
+
+          // restore the previously bound ESC key
+          if (previousEsc !== false) {
+            _add(previousEsc);
+          }
+        }
+      }
+
+      /**
+       * Creates a new Hotkey and creates the Mousetrap binding
+       *
+       * @param {string}   combo       mousetrap key binding
+       * @param {string}   description description for the help menu
+       * @param {Function} callback    method to call when key is pressed
+       * @param {string}   action      the type of event to listen for (for mousetrap)
+       * @param {array}    allowIn     an array of tag names to allow this combo in ('INPUT', 'SELECT', and/or 'TEXTAREA')
+       * @param {boolean}  persistent  if true, the binding is preserved upon route changes
+       */
+      function _add (combo, description, callback, action, allowIn, persistent) {
+
+        // used to save original callback for "allowIn" wrapping:
+        var _callback;
+
+        // these elements are prevented by the default Mousetrap.stopCallback():
+        var preventIn = ['INPUT', 'SELECT', 'TEXTAREA'];
+
+        // Determine if object format was given:
+        var objType = Object.prototype.toString.call(combo);
+
+        if (objType === '[object Object]') {
+          description = combo.description;
+          callback    = combo.callback;
+          action      = combo.action;
+          persistent  = combo.persistent;
+          allowIn     = combo.allowIn;
+          combo       = combo.combo;
+        }
+
+        // description is optional:
+        if (description instanceof Function) {
+          action = callback;
+          callback = description;
+          description = '$$undefined$$';
+        } else if (angular.isUndefined(description)) {
+          description = '$$undefined$$';
+        }
+
+        // any items added through the public API are for controllers
+        // that persist through navigation, and thus undefined should mean
+        // true in this case.
+        if (persistent === undefined) {
+          persistent = true;
+        }
+
+        // if callback is defined, then wrap it in a function
+        // that checks if the event originated from a form element.
+        // the function blocks the callback from executing unless the element is specified
+        // in allowIn (emulates Mousetrap.stopCallback() on a per-key level)
+        if (typeof callback === 'function') {
+
+          // save the original callback
+          _callback = callback;
+
+          // make sure allowIn is an array
+          if (!(allowIn instanceof Array)) {
+            allowIn = [];
+          }
+
+          // remove anything from preventIn that's present in allowIn
+          var index;
+          for (var i=0; i < allowIn.length; i++) {
+            allowIn[i] = allowIn[i].toUpperCase();
+            index = preventIn.indexOf(allowIn[i]);
+            if (index !== -1) {
+              preventIn.splice(index, 1);
+            }
+          }
+
+          // create the new wrapper callback
+          callback = function(event) {
+            var shouldExecute = true;
+            var target = event.target || event.srcElement; // srcElement is IE only
+            var nodeName = target.nodeName.toUpperCase();
+
+            // check if the input has a mousetrap class, and skip checking preventIn if so
+            if ((' ' + target.className + ' ').indexOf(' mousetrap ') > -1) {
+              shouldExecute = true;
+            } else {
+              // don't execute callback if the event was fired from inside an element listed in preventIn
+              for (var i=0; i<preventIn.length; i++) {
+                if (preventIn[i] === nodeName) {
+                  shouldExecute = false;
+                  break;
+                }
+              }
+            }
+
+            if (shouldExecute) {
+              wrapApply(_callback.apply(this, arguments));
+            }
+          };
+        }
+
+        if (typeof(action) === 'string') {
+          Mousetrap.bind(combo, wrapApply(callback), action);
+        } else {
+          Mousetrap.bind(combo, wrapApply(callback));
+        }
+
+        var hotkey = new Hotkey(combo, description, callback, action, allowIn, persistent);
+        scope.hotkeys.push(hotkey);
+        return hotkey;
+      }
+
+      /**
+       * delete and unbind a Hotkey
+       *
+       * @param  {mixed} hotkey   Either the bound key or an instance of Hotkey
+       * @return {boolean}        true if successful
+       */
+      function _del (hotkey) {
+        var combo = (hotkey instanceof Hotkey) ? hotkey.combo : hotkey;
+
+        Mousetrap.unbind(combo);
+
+        if (combo instanceof Array) {
+          var retStatus = true;
+          for (var i = 0; i < combo.length; i++) {
+            retStatus = _del(combo[i]) && retStatus;
+          }
+          return retStatus;
+        } else {
+          var index = scope.hotkeys.indexOf(_get(combo));
+
+          if (index > -1) {
+            // if the combo has other combos bound, don't unbind the whole thing, just the one combo:
+            if (scope.hotkeys[index].combo.length > 1) {
+              scope.hotkeys[index].combo.splice(scope.hotkeys[index].combo.indexOf(combo), 1);
+            } else {
+              scope.hotkeys.splice(index, 1);
+            }
+            return true;
+          }
+        }
+
+        return false;
+
+      }
+
+      /**
+       * Get a Hotkey object by key binding
+       *
+       * @param  {[string]} combo  the key the Hotkey is bound to
+       * @return {Hotkey}          The Hotkey object
+       */
+      function _get (combo) {
+
+        var hotkey;
+
+        for (var i = 0; i < scope.hotkeys.length; i++) {
+          hotkey = scope.hotkeys[i];
+
+          if (hotkey.combo.indexOf(combo) > -1) {
+            return hotkey;
+          }
+        }
+
+        return false;
+      }
+
+      /**
+       * Binds the hotkey to a particular scope.  Useful if the scope is
+       * destroyed, we can automatically destroy the hotkey binding.
+       *
+       * @param  {Object} scope The scope to bind to
+       */
+      function bindTo (scope) {
+        // Add the scope to the list of bound scopes
+        boundScopes[scope.$id] = [];
+
+        scope.$on('$destroy', function () {
+          var i = boundScopes[scope.$id].length;
+          while (i--) {
+            _del(boundScopes[scope.$id][i]);
+            delete boundScopes[scope.$id][i];
+          }
+        });
+
+        // return an object with an add function so we can keep track of the
+        // hotkeys and their scope that we added via this chaining method
+        return {
+          add: function (args) {
+            var hotkey;
+
+            if (arguments.length > 1) {
+              hotkey = _add.apply(this, arguments);
+            } else {
+              hotkey = _add(args);
+            }
+
+            boundScopes[scope.$id].push(hotkey);
+            return this;
+          }
+        };
+      }
+
+      /**
+       * All callbacks sent to Mousetrap are wrapped using this function
+       * so that we can force a $scope.$apply()
+       *
+       * @param  {Function} callback [description]
+       * @return {[type]}            [description]
+       */
+      function wrapApply (callback) {
+        // return mousetrap a function to call
+        return function (event, combo) {
+
+          // if this is an array, it means we provided a route object
+          // because the scope wasn't available yet, so rewrap the callback
+          // now that the scope is available:
+          if (callback instanceof Array) {
+            var funcString = callback[0];
+            var route = callback[1];
+            callback = function (event) {
+              route.scope.$eval(funcString);
+            };
+          }
+
+          // this takes place outside angular, so we'll have to call
+          // $apply() to make sure angular's digest happens
+          $rootScope.$apply(function() {
+            // call the original hotkey callback with the keyboard event
+            callback(event, _get(combo));
+          });
+        };
+      }
+
+
+      var publicApi = {
+        add                   : _add,
+        del                   : _del,
+        get                   : _get,
+        bindTo                : bindTo,
+        template              : this.template,
+        toggleCheatSheet      : toggleCheatSheet,
+        includeCheatSheet     : this.includeCheatSheet,
+        cheatSheetHotkey      : this.cheatSheetHotkey,
+        cheatSheetDescription : this.cheatSheetDescription,
+        purgeHotkeys          : purgeHotkeys,
+        templateTitle         : this.templateTitle
+      };
+
+      return publicApi;
+
+    };
+  })
+
+  .directive('hotkey', function (hotkeys) {
+    return {
+      restrict: 'A',
+      link: function (scope, el, attrs) {
+        var key, allowIn;
+
+        angular.forEach(scope.$eval(attrs.hotkey), function (func, hotkey) {
+          // split and trim the hotkeys string into array
+          allowIn = typeof attrs.hotkeyAllowIn === "string" ? attrs.hotkeyAllowIn.split(/[\s,]+/) : [];
+
+          key = hotkey;
+
+          hotkeys.add({
+            combo: hotkey,
+            description: attrs.hotkeyDescription,
+            callback: func,
+            action: attrs.hotkeyAction,
+            allowIn: allowIn
+          });
+        });
+
+        // remove the hotkey if the directive is destroyed:
+        el.bind('$destroy', function() {
+          hotkeys.del(key);
+        });
+      }
+    };
+  })
+
+  .run(function(hotkeys) {
+    // force hotkeys to run by injecting it. Without this, hotkeys only runs
+    // when a controller or something else asks for it via DI.
+  });
+
+})();
+define("hotkey", ["angular"], function(){});
+
 // CodeMirror version 3.22
 //
 // CodeMirror is the only global var we claim
@@ -43486,11 +44047,11 @@ define('workspace/eqobj',["./mquery"], function(mquery) {
             var s1, v, s2 = ""
             s1 = subTree.s1
             s2 = subTree.s2
-            var value = subTree.v
-            if (value.a !== undefined) {
-                v = stringifyArray(value.a)
-            } else if (value.f !== undefined) {
-                v = stringifyFunction(value.f)
+            var value = subTree[getValue()]
+            if (value[getArray()] !== undefined) {
+                v = stringifyArray(value[getArray()])
+            } else if (value[getF()] !== undefined) {
+                v = stringifyFunction(value[getF()])
             } else if (value.o !== undefined) {
                 v = stringifyObj(value.o)
             } else {
@@ -43514,11 +44075,11 @@ define('workspace/eqobj',["./mquery"], function(mquery) {
 
         function stringifyFunction(f) {
 
-            if (f.arg.length == 0) {
+            if (f[getArg()].length == 0) {
                 return f.name;
             } else {
                 var text = f.name + "("
-                var values = f.arg
+                var values = f[getArg()]
                 values.forEach(function(val, i) {
                     if (i != 0) {
                         text += ','
@@ -43543,7 +44104,7 @@ define('workspace/eqobj',["./mquery"], function(mquery) {
         }
 
         function stringifyAtomicValue(tag, contents) {
-            if (tag == "Pstring") {
+            if (tag == getString()) {
                 return "\"" + contents + "\""
             } else {
                 return contents
@@ -43552,6 +44113,31 @@ define('workspace/eqobj',["./mquery"], function(mquery) {
 
     };
 
+    function getArg(){
+        return "arg"
+    }
+
+    function getValue(){
+        return "v"
+    }
+
+    function getArray(){
+        return "a"
+    }
+    function getF(){
+        return "f"
+    }
+    function getString(){
+        return "Pstring"
+    }
+
+    function getBool(){
+        return "Pbool"
+    }
+
+    function getNum(){
+        return "Pnum"
+    }
     //search
     function findEQ(name) {
         var eq = eqWrapper.getEQ();
@@ -43592,7 +44178,7 @@ define('workspace/eqobj',["./mquery"], function(mquery) {
 
     function getDisplayItem_(eqObj, id) {
         var m = new mquery.M(eqObj[0][1])
-        m.getFunction("show", 0).fwd(["v", "a"]).select(id)
+        m.getFunction("show", 0).fwd([getValue(), getArray()]).select(id)
         return m
     }
 
@@ -43608,7 +44194,7 @@ define('workspace/eqobj',["./mquery"], function(mquery) {
     function getElemOfArray(i) {
         return function(eqObj) {
             var m = new mquery.M(eqObj)
-            m.fwd(['v', 'a']).select(i)
+            m.fwd([getValue(), getArray()]).select(i)
             return m.val()
         }
     }
@@ -43617,7 +44203,7 @@ define('workspace/eqobj',["./mquery"], function(mquery) {
 
     function isArray(eqObj) {
         var m = new mquery.M(eqObj)
-        m.fwd(['v', 'a'])
+        m.fwd([getValue(), getArray()])
         return m.val()
     }
 
@@ -43625,9 +44211,9 @@ define('workspace/eqobj',["./mquery"], function(mquery) {
     function isVariable(eqObj) {
         var m = new mquery.M(eqObj)
         var b = new mquery.M(eqObj)
-        m.fwd(['v', 'f', 'arg']).compare('length', 0)
+        m.fwd([getValue(), getF(), getArg()]).compare('length', 0)
         if (!m.maybe().isNothing()) {
-            return b.fwd(['v', 'f']).val()
+            return b.fwd([getValue(), getF()]).val()
         }
         return m.val()
     }
@@ -43671,17 +44257,17 @@ define('workspace/eqobj',["./mquery"], function(mquery) {
 
     function addOrChangeAtomicValue(hook, subeqObj, eqObj) {
         if (isVariable(subeqObj)) {
-            addOrChangeAtomicValue(hook, findEQ(subeqObj.v.f.name));
+            addOrChangeAtomicValue(hook, findEQ(subeqObj[getValue()][getF()].name));
         } else {
             if (false) {
                 addAtomicValue(hook, subeqObj)
             } else {
                 if (subeqObj[hook.row] != undefined) {
                     if (isVariable(subeqObj[hook.row])) {
-                        var valueToChange = M(findEQ(subeqObj[hook.row].v.f.name).v);
+                        var valueToChange = M(findEQ(subeqObj[hook.row][getValue()][getF()].name)[getValue()]);
                         changeVariable(hook.new, valueToChange);
                     } else {
-                        var valueToChange = subeqObj[hook.row].v
+                        var valueToChange = subeqObj[hook.row][getValue()]
                         changeAtomic(hook.new, valueToChange)
                     }
                 } else {
@@ -43699,8 +44285,8 @@ define('workspace/eqobj',["./mquery"], function(mquery) {
 
     function changeVariable(value, exp) {
         val = exp.val()
-        if (!(exp.fwd(['f', 'arg']).compare('length', 0).isNothing())) {
-            var valueToChange = M(findEQ(val.f.name).v);
+        if (!(exp.fwd([getF(), getArg()]).compare('length', 0).isNothing())) {
+            var valueToChange = M(findEQ(val[getF()].name)[getValue()]);
             changeVariable(value, valueToChange);
         } else {
             changeAtomic(value, exp.val())
@@ -43721,7 +44307,7 @@ define('workspace/eqobj',["./mquery"], function(mquery) {
     }
 
     function changePbool(value, subeqObj) {
-        subeqObj.tag = 'Pbool'
+        subeqObj.tag = getBool()
         if (value == "false")
             subeqObj.contents = false
         else {
@@ -43730,12 +44316,12 @@ define('workspace/eqobj',["./mquery"], function(mquery) {
     }
 
     function changePstring(value, subeqObj) {
-        subeqObj.tag = 'Pstring'
+        subeqObj.tag = getString()
         subeqObj.contents = value
     }
 
     function changePnum(value, subeqObj) {
-        subeqObj.tag = 'Pnum'
+        subeqObj.tag = getNum()
         subeqObj.contents = Number(value)
     }
 
@@ -43748,7 +44334,7 @@ define('workspace/eqobj',["./mquery"], function(mquery) {
         if (!data.isNothing()) {
             data.val().forEach(function(val, i) {
                 valueToDelete = new M(val);
-                if (!valueToDelete.fwd(['v']).isNothing()) {
+                if (!valueToDelete.fwd([getValue()]).isNothing()) {
                     removeFromVariable(row, valueToDelete);
 
                 }
@@ -43760,22 +44346,22 @@ define('workspace/eqobj',["./mquery"], function(mquery) {
     function removeFromVariable(row, exp) {
         var val = exp.val()
 
-        if (!(exp.fwd(['f', 'arg']).compare('length', 0).isNothing())) {
-            var valueToChange = M(findEQ(val.f.name).v);
+        if (!(exp.fwd([getF(), getArg()]).compare('length', 0).isNothing())) {
+            var valueToChange = M(findEQ(val[getF()].name)[getValue()]);
             removeFromVariable(row, valueToChange);
         } else {
-            val.a.splice(row - 1, 1);
+            val[getArray()].splice(row - 1, 1);
         }
     }
 
     function removeCol(col, exp) {
         var val = exp.val()
 
-        if (!(exp.fwd(['f', 'arg']).compare('length', 0).isNothing())) {
-            var valueToChange = M(findEQ(val.f.name).v);
+        if (!(exp.fwd([getF(), getArg()]).compare('length', 0).isNothing())) {
+            var valueToChange = M(findEQ(val[getF()].name)[getValue()]);
             removeCol(col, valueToChange);
         } else {
-            val.v.a.splice(col, 1);
+            val[getValue()][getArray()].splice(col, 1);
         }
     }
 
@@ -43785,11 +44371,11 @@ define('workspace/eqobj',["./mquery"], function(mquery) {
     function addVariable(row, exp, variable) {
         var val = exp.val()
 
-        if (!(exp.fwd(['f', 'arg']).compare('length', 0).isNothing())) {
-            var valueToChange = M(findEQ(val.f.name).v);
+        if (!(exp.fwd([getF(), getArg()]).compare('length', 0).isNothing())) {
+            var valueToChange = M(findEQ(val[getF()].name)[getValue()]);
             removeFromVariable(row, valueToChange);
         } else {
-            val.a.splice(row, 0, variable);
+            val[getArray()].splice(row, 0, variable);
         }
     }
 
@@ -43805,12 +44391,12 @@ define('workspace/eqobj',["./mquery"], function(mquery) {
             valueToDelete = new M(val);
             if (!valueToDelete.isNothing()) {
                 back = new M(val)
-                if (valueToDelete.fwd(["v", "f", "arg"]).compare("length", 0)) {
-                    var valueToChange = M(findEQ(back.fwd(['v', 'f', 'name']).val()).v);
+                if (valueToDelete.fwd([getValue(), getF(), getArg()]).compare("length", 0)) {
+                    var valueToChange = M(findEQ(back.fwd([getValue(), getF(), 'name']).val())[getValue()]);
                     //valueToChange.log()
                     addVariable(row, valueToChange, createEmptyVal());
                 } else {
-                    val.v.a.splice(row, 0, createEmptyVal());
+                    val[getValue()][getArray()].splice(row, 0, createEmptyVal());
                 }
             }
         })
@@ -43819,7 +44405,7 @@ define('workspace/eqobj',["./mquery"], function(mquery) {
     }
 
     function addCol(exp, col) {
-        exp.val().v.a.splice(col, 0, createArray([]));
+        exp.val()[getValue()][getArray()].splice(col, 0, createArray([]));
     }
 
     function addAtomicValue(hook, subeqObj) {
@@ -43849,8 +44435,8 @@ define('workspace/eqobj',["./mquery"], function(mquery) {
 
     function createVal(hook, subeqObj, fn) {
         var value = {}
-        value.v = {};
-        fn(hook, value.v)
+        value[getValue()] = {};
+        fn(hook, value[getValue()])
         value.s1 = ""
         value.s2 = ""
         return value
@@ -43866,7 +44452,7 @@ define('workspace/eqobj',["./mquery"], function(mquery) {
 
     function createString(val) {
         var value = {}
-        value.v = {
+        value[getValue()] = {
             tag: "Pstring",
             contents: val
         };
@@ -43930,7 +44516,7 @@ define('workspace/eqobj',["./mquery"], function(mquery) {
     }
 
     function addShow(eq) {
-        eqWrapper.getEQ()[0][1].v.f.arg[0].v.a.push(createFunction(eq, []));
+        eqWrapper.getEQ()[0][1][getValue()][getF()][getArg()][0][getValue()][getArray()].push(createFunction(eq, []));
     }
 
     
@@ -43951,6 +44537,7 @@ define('workspace/eqobj',["./mquery"], function(mquery) {
         createMatrix: createMatrix,
         createObject: createObject,
         createArray: createArray,
+        createString:createString,
     }
 })
 ;
@@ -43992,7 +44579,7 @@ define('workspace/evaluator',["./eqobj"], function(eqobj) {
                     isCalculatingWaiting = false;
                 } else {
                     setTimeout(function() {
-                        pollingServerCalcGetResult(nbTry + 1)
+                        pollingServerCalcGetResult(nbTry + 1, fn)
                     }, 10);
                 }
             });
@@ -44017,10 +44604,21 @@ define('workspace/handsontable-fabric',[
     }
 
     function HDT_fabric(table, updateEditorText, data, container) {
+        var safeHtmlRenderer = function(instance, td, row, col, prop, value, cellProperties) {
+            var escaped = Handsontable.helper.stringify(value);
+            //escaped = strip_tags(escaped, '<em><b><strong><a><big>'); //be sure you only allow certain HTML tags to avoid XSS threats (you should also remove unwanted HTML attributes)
+            td.innerHTML = escaped;
+            if(cellProperties.readOnly)
+            $(td).css("color","#555")
+            return td;
+        };
 
         this.options = {
             data: table.data,
-            colHeaders: table.param.col == null ? true : table.param.col,
+            columns: makeArrayOf({
+                renderer: safeHtmlRenderer
+            }, table.data[0].length), //Array.apply(null, new Array(table.param.col.length)).map(Object.prototype.valueOf,{renderer:safeHtmlRenderer}),
+            colHeaders: (table.param.header===0) ? false : (table.param.col == null)? true : table.param.col,
             minSpareRows: 1,
             stretchH: 'all',
             width: Math.min(75 * table.data[0].length - 1, 750),
@@ -44033,7 +44631,7 @@ define('workspace/handsontable-fabric',[
             afterCreateCol: afterCreateCol,
             afterSelection: function(r, c, r1, c2) {
                 var hook = [r, c, r1, c2]
-                if (r1 < this.countRows() - 2 || r!=0) {
+                if (r1 < this.countRows() - 2 || r != 0) {
                     data.fnAfterChange("select(" + table.prettyData() + "," + hook + ")")
                 } else {
                     data.fnAfterChange("col(" + table.prettyData() + "," + c + ")")
@@ -44172,7 +44770,22 @@ define('workspace/handsontable-fabric',[
             return check
         }
 
+        function makeArrayOf(value, length) {
+            var arr = [],
+                i = length;
+            while (i--) {
+                arr[i] = value;
+            }
+            return arr;
+        }
 
+
+        var safeHtmlRenderer = function(instance, td, row, col, prop, value, cellProperties) {
+            var escaped = Handsontable.helper.stringify(value);
+            //escaped = strip_tags(escaped, '<em><b><strong><a><big>'); //be sure you only allow certain HTML tags to avoid XSS threats (you should also remove unwanted HTML attributes)
+            td.innerHTML = escaped;
+            return td;
+        };
 
         function setEmptyStringNull(table) {
             var cells = table.getDataAtRow(table.countRows() - 1);
@@ -44450,6 +45063,10 @@ define('workspace/widget',[
                     var handsontable = new handsontable_fabric.HDT_fabric(table, updateEditorText, data, $("#containment-wrapper"))
                     var tableAdd = $('#containment-wrapper div.handsontable-wrapper').last()
                     tableAdd.handsontable(handsontable.options);
+                    if (table.param.grid === 0)
+                        tableAdd.find("td").css("border-width", "0")
+                    if (table.param.align === "center")
+                        tableAdd.find("td").addClass("text-center")
                 }
 
 
@@ -44458,11 +45075,19 @@ define('workspace/widget',[
                     editor.save();
                 }
 
-                function addToEditorText(value) {
+                function addToEditorText(name, value, toshow) {
+                    if (toshow) {
+                        eqobj.addShow(name)
+                        updateEditorText()
+                    }
                     var preText = editor.getDoc().getValue()
                     $('#invisible-wrapper').css("visibility", "visible");
                     if (message.fn != null) message.fn("Please, reload the page with GO!")
-                    editor.getDoc().setValue(preText + "\n" + value)
+                    if (name != null && name.length > 0) {
+                        editor.getDoc().setValue(preText + "\n" + name + " = " + value)
+                    } else {
+                        editor.getDoc().setValue(preText + "\n" + value)
+                    }
                 }
 
                 function setWidget() {
@@ -44522,10 +45147,10 @@ define('workspace/widget',[
                     var nbCol = parseInt(nbcol)
                     var arr = new Array(nbCol);
                     for (var a = []; a.length < 1; a.push(arr.slice(0)));
-                    var f = eqobj.createFunction("table", [eqobj.createFunction(name + "data", []), eqobj.createObject([])])
+                    var f = eqobj.createFunction("table", [eqobj.createFunction(name + "Data", []), eqobj.createObject([])])
                     var eqs = eqobj.addEq(name, f)
-                    
-                    eqobj.addEq(name + "data", eqobj.createMatrix(nbCol, 0));
+
+                    eqobj.addEq(name + "Data", eqobj.createMatrix(nbCol, 0));
                     eqobj.addShow(name)
                     displayOneTable(table.Table.fromArray(eqs, a, null))
                     setWidget();
@@ -44535,16 +45160,21 @@ define('workspace/widget',[
                     var a = data
                     var nbCol = data[0].length
                     var colName = []
-                    if (header != null) {
-                        for (var i = 0; a < header; a++) {
-                            colName.push(eqobj.createString(header[i]))
+                    console.log(header)
+                    if (header) {
+                        console.log(data[0].length)
+                        for (var i = 0; i < data[0].length; i++) {
+                            colName.push(eqobj.createString(data[0][i]))
                         }
                     }
-                    var col = eqobj.createObject([])
-                    var f = eqobj.createFunction("table", [eqobj.createFunction(name + "data", []), col])
+                    console.log(colName.length)
+                    var col = eqobj.createObject([
+                        ['col', eqobj.createArray(colName)]
+                    ])
+                    var f = eqobj.createFunction("table", [eqobj.createFunction(name + "Data", []), col])
                     var eqs = eqobj.addEq(name, f)
 
-                    eqobj.addEq(name + "data", eqobj.createMatrix(nbCol, 0));
+                    eqobj.addEq(name + "Data", eqobj.createMatrix(nbCol, 0));
                     eqobj.addShow(name)
                     displayOneTable(table.Table.fromArray(eqs, a, null, header))
                     setWidget();
@@ -44583,13 +45213,21 @@ define('workspace/widget',[
             app.controller('WidgetController',
                 function($scope, WidgetService) {
                     $scope.WidgetService = WidgetService
+                    $scope.btnTxt = "GO!"
                     WidgetService.message.fn = function(msg) {
                         $scope.message = msg
                     }
                     $scope.update = function() {
+                        
                         $scope.WidgetService.editor.save()
                         $scope.message = ""
-                        evaluator.eqEvaluation($scope.updateData)
+                        $scope.btnTxt = "..."
+                        angular.element(document).ready(function() {
+                            while ($scope.updateData==null){console.log("null")}
+                                console.log($scope.updateData)
+                            evaluator.eqEvaluation($scope.updateData)
+                        })
+                        $scope.btnTxt = "GO!"
                     }
 
                     $scope.updateData = function(data) {
@@ -44609,7 +45247,1450 @@ define('workspace/widget',[
         }
     });
 
-define('workspace/fnList',["./widget"], function(widget) {
+/*!
+ * .pos() plugin based on jQuery UI Position 1.10.4, renamed to avoid
+ * problems with jQuery native .position(), and added some triggers when position
+ * collapses
+ * 
+ * http://jqueryui.com
+ *
+ * Copyright 2014 jQuery Foundation and other contributors
+ * Released under the MIT license.
+ * http://jquery.org/license
+ *
+ * http://api.jqueryui.com/position/
+ */
+(function($, undefined) {
+
+    $.ui = $.ui || {};
+
+    var cachedScrollbarWidth,
+        max = Math.max,
+        abs = Math.abs,
+        round = Math.round,
+        rhorizontal = /left|center|right/,
+        rvertical = /top|center|bottom/,
+        roffset = /[\+\-]\d+(\.[\d]+)?%?/,
+        rposition = /^\w+/,
+        rpercent = /%$/,
+        _position = $.fn.pos;
+
+    function getOffsets(offsets, width, height) {
+        return [
+            parseFloat(offsets[0]) * (rpercent.test(offsets[0]) ? width / 100 : 1),
+            parseFloat(offsets[1]) * (rpercent.test(offsets[1]) ? height / 100 : 1)
+        ];
+    }
+
+    function parseCss(element, property) {
+        return parseInt($.css(element, property), 10) || 0;
+    }
+
+    function getDimensions(elem) {
+        var raw = elem[0];
+        if (raw.nodeType === 9) {
+            return {
+                width: elem.width(),
+                height: elem.height(),
+                offset: {
+                    top: 0,
+                    left: 0
+                }
+            };
+        }
+        if ($.isWindow(raw)) {
+            return {
+                width: elem.width(),
+                height: elem.height(),
+                offset: {
+                    top: elem.scrollTop(),
+                    left: elem.scrollLeft()
+                }
+            };
+        }
+        if (raw.preventDefault) {
+            return {
+                width: 0,
+                height: 0,
+                offset: {
+                    top: raw.pageY,
+                    left: raw.pageX
+                }
+            };
+        }
+        return {
+            width: elem.outerWidth(),
+            height: elem.outerHeight(),
+            offset: elem.offset()
+        };
+    }
+
+    $.pos = {
+        scrollbarWidth: function() {
+            if (cachedScrollbarWidth !== undefined) {
+                return cachedScrollbarWidth;
+            }
+            var w1, w2,
+                div = $("<div style='display:block;position:absolute;width:50px;height:50px;overflow:hidden;'><div style='height:100px;width:auto;'></div></div>"),
+                innerDiv = div.children()[0];
+
+            $("body").append(div);
+            w1 = innerDiv.offsetWidth;
+            div.css("overflow", "scroll");
+
+            w2 = innerDiv.offsetWidth;
+
+            if (w1 === w2) {
+                w2 = div[0].clientWidth;
+            }
+
+            div.remove();
+
+            return (cachedScrollbarWidth = w1 - w2);
+        },
+        getScrollInfo: function(within) {
+            var overflowX = within.isWindow || within.isDocument ? "" :
+                within.element.css("overflow-x"),
+                overflowY = within.isWindow || within.isDocument ? "" :
+                within.element.css("overflow-y"),
+                hasOverflowX = overflowX === "scroll" ||
+                (overflowX === "auto" && within.width < within.element[0].scrollWidth),
+                hasOverflowY = overflowY === "scroll" ||
+                (overflowY === "auto" && within.height < within.element[0].scrollHeight);
+            return {
+                width: hasOverflowY ? $.pos.scrollbarWidth() : 0,
+                height: hasOverflowX ? $.pos.scrollbarWidth() : 0
+            };
+        },
+        getWithinInfo: function(element) {
+            var withinElement = $(element || window),
+                isWindow = $.isWindow(withinElement[0]),
+                isDocument = !!withinElement[0] && withinElement[0].nodeType === 9;
+            return {
+                element: withinElement,
+                isWindow: isWindow,
+                isDocument: isDocument,
+                offset: withinElement.offset() || {
+                    left: 0,
+                    top: 0
+                },
+                scrollLeft: withinElement.scrollLeft(),
+                scrollTop: withinElement.scrollTop(),
+                width: isWindow ? withinElement.width() : withinElement.outerWidth(),
+                height: isWindow ? withinElement.height() : withinElement.outerHeight()
+            };
+        }
+    };
+
+    $.fn.pos = function(options) {
+        if (!options || !options.of) {
+            return _position.apply(this, arguments);
+        }
+
+        // make a copy, we don't want to modify arguments
+        options = $.extend({}, options);
+
+        var atOffset, targetWidth, targetHeight, targetOffset, basePosition, dimensions,
+            target = $(options.of),
+            within = $.pos.getWithinInfo(options.within),
+            scrollInfo = $.pos.getScrollInfo(within),
+            collision = (options.collision || "flip").split(" "),
+            offsets = {};
+
+        dimensions = getDimensions(target);
+        if (target[0].preventDefault) {
+            // force left top to allow flipping
+            options.at = "left top";
+        }
+        targetWidth = dimensions.width;
+        targetHeight = dimensions.height;
+        targetOffset = dimensions.offset;
+        // clone to reuse original targetOffset later
+        basePosition = $.extend({}, targetOffset);
+
+        // force my and at to have valid horizontal and vertical positions
+        // if a value is missing or invalid, it will be converted to center
+        $.each(["my", "at"], function() {
+            var pos = (options[this] || "").split(" "),
+                horizontalOffset,
+                verticalOffset;
+
+            if (pos.length === 1) {
+                pos = rhorizontal.test(pos[0]) ?
+                    pos.concat(["center"]) :
+                    rvertical.test(pos[0]) ? ["center"].concat(pos) : ["center", "center"];
+            }
+            pos[0] = rhorizontal.test(pos[0]) ? pos[0] : "center";
+            pos[1] = rvertical.test(pos[1]) ? pos[1] : "center";
+
+            // calculate offsets
+            horizontalOffset = roffset.exec(pos[0]);
+            verticalOffset = roffset.exec(pos[1]);
+            offsets[this] = [
+                horizontalOffset ? horizontalOffset[0] : 0,
+                verticalOffset ? verticalOffset[0] : 0
+            ];
+
+            // reduce to just the positions without the offsets
+            options[this] = [
+                rposition.exec(pos[0])[0],
+                rposition.exec(pos[1])[0]
+            ];
+        });
+
+        // normalize collision option
+        if (collision.length === 1) {
+            collision[1] = collision[0];
+        }
+
+        if (options.at[0] === "right") {
+            basePosition.left += targetWidth;
+        } else if (options.at[0] === "center") {
+            basePosition.left += targetWidth / 2;
+        }
+
+        if (options.at[1] === "bottom") {
+            basePosition.top += targetHeight;
+        } else if (options.at[1] === "center") {
+            basePosition.top += targetHeight / 2;
+        }
+
+        atOffset = getOffsets(offsets.at, targetWidth, targetHeight);
+        basePosition.left += atOffset[0];
+        basePosition.top += atOffset[1];
+
+        return this.each(function() {
+            var collisionPosition, using,
+                elem = $(this),
+                elemWidth = elem.outerWidth(),
+                elemHeight = elem.outerHeight(),
+                marginLeft = parseCss(this, "marginLeft"),
+                marginTop = parseCss(this, "marginTop"),
+                collisionWidth = elemWidth + marginLeft + parseCss(this, "marginRight") + scrollInfo.width,
+                collisionHeight = elemHeight + marginTop + parseCss(this, "marginBottom") + scrollInfo.height,
+                position = $.extend({}, basePosition),
+                myOffset = getOffsets(offsets.my, elem.outerWidth(), elem.outerHeight());
+
+            if (options.my[0] === "right") {
+                position.left -= elemWidth;
+            } else if (options.my[0] === "center") {
+                position.left -= elemWidth / 2;
+            }
+
+            if (options.my[1] === "bottom") {
+                position.top -= elemHeight;
+            } else if (options.my[1] === "center") {
+                position.top -= elemHeight / 2;
+            }
+
+            position.left += myOffset[0];
+            position.top += myOffset[1];
+
+            // if the browser doesn't support fractions, then round for consistent results
+            if (!$.support.offsetFractions) {
+                position.left = round(position.left);
+                position.top = round(position.top);
+            }
+
+            collisionPosition = {
+                marginLeft: marginLeft,
+                marginTop: marginTop
+            };
+
+            $.each(["left", "top"], function(i, dir) {
+                if ($.ui.pos[collision[i]]) {
+                    $.ui.pos[collision[i]][dir](position, {
+                        targetWidth: targetWidth,
+                        targetHeight: targetHeight,
+                        elemWidth: elemWidth,
+                        elemHeight: elemHeight,
+                        collisionPosition: collisionPosition,
+                        collisionWidth: collisionWidth,
+                        collisionHeight: collisionHeight,
+                        offset: [atOffset[0] + myOffset[0], atOffset[1] + myOffset[1]],
+                        my: options.my,
+                        at: options.at,
+                        within: within,
+                        elem: elem
+                    });
+                }
+            });
+
+            if (options.using) {
+                // adds feedback as second argument to using callback, if present
+                using = function(props) {
+                    var left = targetOffset.left - position.left,
+                        right = left + targetWidth - elemWidth,
+                        top = targetOffset.top - position.top,
+                        bottom = top + targetHeight - elemHeight,
+                        feedback = {
+                            target: {
+                                element: target,
+                                left: targetOffset.left,
+                                top: targetOffset.top,
+                                width: targetWidth,
+                                height: targetHeight
+                            },
+                            element: {
+                                element: elem,
+                                left: position.left,
+                                top: position.top,
+                                width: elemWidth,
+                                height: elemHeight
+                            },
+                            horizontal: right < 0 ? "left" : left > 0 ? "right" : "center",
+                            vertical: bottom < 0 ? "top" : top > 0 ? "bottom" : "middle"
+                        };
+                    if (targetWidth < elemWidth && abs(left + right) < targetWidth) {
+                        feedback.horizontal = "center";
+                    }
+                    if (targetHeight < elemHeight && abs(top + bottom) < targetHeight) {
+                        feedback.vertical = "middle";
+                    }
+                    if (max(abs(left), abs(right)) > max(abs(top), abs(bottom))) {
+                        feedback.important = "horizontal";
+                    } else {
+                        feedback.important = "vertical";
+                    }
+                    options.using.call(this, props, feedback);
+                };
+            }
+
+            elem.offset($.extend(position, {
+                using: using
+            }));
+        });
+    };
+
+    $.ui.pos = {
+        _trigger: function(position, data, name, triggered) {
+            if (data.elem) {
+                data.elem.trigger({
+                    'type': name,
+                    'position': position,
+                    'positionData': data,
+                    'triggered': triggered
+                });
+            }
+        },
+        fit: {
+            left: function(position, data) {
+                $.ui.pos._trigger(position, data, 'posCollide', 'fitLeft');
+                var within = data.within,
+                    withinOffset = within.isWindow ? within.scrollLeft : within.offset.left,
+                    outerWidth = within.width,
+                    collisionPosLeft = position.left - data.collisionPosition.marginLeft,
+                    overLeft = withinOffset - collisionPosLeft,
+                    overRight = collisionPosLeft + data.collisionWidth - outerWidth - withinOffset,
+                    newOverRight;
+
+                // element is wider than within
+                if (data.collisionWidth > outerWidth) {
+                    // element is initially over the left side of within
+                    if (overLeft > 0 && overRight <= 0) {
+                        newOverRight = position.left + overLeft + data.collisionWidth - outerWidth - withinOffset;
+                        position.left += overLeft - newOverRight;
+                        // element is initially over right side of within
+                    } else if (overRight > 0 && overLeft <= 0) {
+                        position.left = withinOffset;
+                        // element is initially over both left and right sides of within
+                    } else {
+                        if (overLeft > overRight) {
+                            position.left = withinOffset + outerWidth - data.collisionWidth;
+                        } else {
+                            position.left = withinOffset;
+                        }
+                    }
+                    // too far left -> align with left edge
+                } else if (overLeft > 0) {
+                    position.left += overLeft;
+                    // too far right -> align with right edge
+                } else if (overRight > 0) {
+                    position.left -= overRight;
+                    // adjust based on position and margin
+                } else {
+                    position.left = max(position.left - collisionPosLeft, position.left);
+                }
+                $.ui.pos._trigger(position, data, 'posCollided', 'fitLeft');
+            },
+            top: function(position, data) {
+                $.ui.pos._trigger(position, data, 'posCollide', 'fitTop');
+                var within = data.within,
+                    withinOffset = within.isWindow ? within.scrollTop : within.offset.top,
+                    outerHeight = data.within.height,
+                    collisionPosTop = position.top - data.collisionPosition.marginTop,
+                    overTop = withinOffset - collisionPosTop,
+                    overBottom = collisionPosTop + data.collisionHeight - outerHeight - withinOffset,
+                    newOverBottom;
+
+                // element is taller than within
+                if (data.collisionHeight > outerHeight) {
+                    // element is initially over the top of within
+                    if (overTop > 0 && overBottom <= 0) {
+                        newOverBottom = position.top + overTop + data.collisionHeight - outerHeight - withinOffset;
+                        position.top += overTop - newOverBottom;
+                        // element is initially over bottom of within
+                    } else if (overBottom > 0 && overTop <= 0) {
+                        position.top = withinOffset;
+                        // element is initially over both top and bottom of within
+                    } else {
+                        if (overTop > overBottom) {
+                            position.top = withinOffset + outerHeight - data.collisionHeight;
+                        } else {
+                            position.top = withinOffset;
+                        }
+                    }
+                    // too far up -> align with top
+                } else if (overTop > 0) {
+                    position.top += overTop;
+                    // too far down -> align with bottom edge
+                } else if (overBottom > 0) {
+                    position.top -= overBottom;
+                    // adjust based on position and margin
+                } else {
+                    position.top = max(position.top - collisionPosTop, position.top);
+                }
+                $.ui.pos._trigger(position, data, 'posCollided', 'fitTop');
+            }
+        },
+        flip: {
+            left: function(position, data) {
+                $.ui.pos._trigger(position, data, 'posCollide', 'flipLeft');
+                var within = data.within,
+                    withinOffset = within.offset.left + within.scrollLeft,
+                    outerWidth = within.width,
+                    offsetLeft = within.isWindow ? within.scrollLeft : within.offset.left,
+                    collisionPosLeft = position.left - data.collisionPosition.marginLeft,
+                    overLeft = collisionPosLeft - offsetLeft,
+                    overRight = collisionPosLeft + data.collisionWidth - outerWidth - offsetLeft,
+                    myOffset = data.my[0] === "left" ?
+                    -data.elemWidth :
+                    data.my[0] === "right" ?
+                    data.elemWidth :
+                    0,
+                    atOffset = data.at[0] === "left" ?
+                    data.targetWidth :
+                    data.at[0] === "right" ?
+                    -data.targetWidth :
+                    0,
+                    offset = -2 * data.offset[0],
+                    newOverRight,
+                    newOverLeft;
+
+                if (overLeft < 0) {
+                    newOverRight = position.left + myOffset + atOffset + offset + data.collisionWidth - outerWidth - withinOffset;
+                    if (newOverRight < 0 || newOverRight < abs(overLeft)) {
+                        position.left += myOffset + atOffset + offset;
+                    }
+                } else if (overRight > 0) {
+                    newOverLeft = position.left - data.collisionPosition.marginLeft + myOffset + atOffset + offset - offsetLeft;
+                    if (newOverLeft > 0 || abs(newOverLeft) < overRight) {
+                        position.left += myOffset + atOffset + offset;
+                    }
+                }
+                $.ui.pos._trigger(position, data, 'posCollided', 'flipLeft');
+            },
+            top: function(position, data) {
+                $.ui.pos._trigger(position, data, 'posCollide', 'flipTop');
+                var within = data.within,
+                    withinOffset = within.offset.top + within.scrollTop,
+                    outerHeight = within.height,
+                    offsetTop = within.isWindow ? within.scrollTop : within.offset.top,
+                    collisionPosTop = position.top - data.collisionPosition.marginTop,
+                    overTop = collisionPosTop - offsetTop,
+                    overBottom = collisionPosTop + data.collisionHeight - outerHeight - offsetTop,
+                    top = data.my[1] === "top",
+                    myOffset = top ?
+                    -data.elemHeight :
+                    data.my[1] === "bottom" ?
+                    data.elemHeight :
+                    0,
+                    atOffset = data.at[1] === "top" ?
+                    data.targetHeight :
+                    data.at[1] === "bottom" ?
+                    -data.targetHeight :
+                    0,
+                    offset = -2 * data.offset[1],
+                    newOverTop,
+                    newOverBottom;
+                if (overTop < 0) {
+                    newOverBottom = position.top + myOffset + atOffset + offset + data.collisionHeight - outerHeight - withinOffset;
+                    if ((position.top + myOffset + atOffset + offset) > overTop && (newOverBottom < 0 || newOverBottom < abs(overTop))) {
+                        position.top += myOffset + atOffset + offset;
+                    }
+                } else if (overBottom > 0) {
+                    newOverTop = position.top - data.collisionPosition.marginTop + myOffset + atOffset + offset - offsetTop;
+                    if ((position.top + myOffset + atOffset + offset) > overBottom && (newOverTop > 0 || abs(newOverTop) < overBottom)) {
+                        position.top += myOffset + atOffset + offset;
+                    }
+                }
+                $.ui.pos._trigger(position, data, 'posCollided', 'flipTop');
+            }
+        },
+        flipfit: {
+            left: function() {
+                $.ui.pos.flip.left.apply(this, arguments);
+                $.ui.pos.fit.left.apply(this, arguments);
+            },
+            top: function() {
+                $.ui.pos.flip.top.apply(this, arguments);
+                $.ui.pos.fit.top.apply(this, arguments);
+            }
+        }
+    };
+
+    // fraction support test
+    (function() {
+        var testElement, testElementParent, testElementStyle, offsetLeft, i,
+            body = document.getElementsByTagName("body")[0],
+            div = document.createElement("div");
+
+        //Create a "fake body" for testing based on method used in jQuery.support
+        testElement = document.createElement(body ? "div" : "body");
+        testElementStyle = {
+            visibility: "hidden",
+            width: 0,
+            height: 0,
+            border: 0,
+            margin: 0,
+            background: "none"
+        };
+        if (body) {
+            $.extend(testElementStyle, {
+                position: "absolute",
+                left: "-1000px",
+                top: "-1000px"
+            });
+        }
+        for (i in testElementStyle) {
+            testElement.style[i] = testElementStyle[i];
+        }
+        testElement.appendChild(div);
+        testElementParent = body || document.documentElement;
+        testElementParent.insertBefore(testElement, testElementParent.firstChild);
+
+        div.style.cssText = "position: absolute; left: 10.7432222px;";
+
+        offsetLeft = $(div).offset().left;
+        $.support.offsetFractions = offsetLeft > 10 && offsetLeft < 11;
+
+        testElement.innerHTML = "";
+        testElementParent.removeChild(testElement);
+    })();
+
+}(jQuery));
+define("position-icon", function(){});
+
+/*!
+ * Font Awesome Icon Picker
+ * http://mjolnic.github.io/fontawesome-iconpicker/
+ *
+ * Originally written by (c) 2014 Javier Aguilar @mjolnic
+ * Licensed under the MIT License
+ * https://github.com/mjolnic/fontawesome-iconpicker/blob/master/LICENSE
+ *
+ */
+
+(function(factory) {
+    
+    if (typeof define === 'function' && define.amd) {
+        define('bootstrap-iconpicker',['jquery'], factory);
+    } else if (window.jQuery && !window.jQuery.fn.iconpicker) {
+        factory(window.jQuery);
+    }
+}
+(function($) {
+    
+
+    var _helpers = {
+        isEmpty: function(val) {
+            return ((val === false) || (val === '') || (val === null) || (val === undefined));
+        },
+        isEmptyObject: function(val) {
+            return (this.isEmpty(val) === true) || (val.length === 0);
+        },
+        isElement: function(selector) {
+            return ($(selector).length > 0);
+        },
+        isString: function(val) {
+            return ((typeof val === 'string') || (val instanceof String));
+        },
+        isArray: function(val) {
+            return $.isArray(val);
+        },
+        inArray: function(val, arr) {
+            return ($.inArray(val, arr) !== -1);
+        },
+        throwError: function(text) {
+            throw "Font Awesome Icon Picker Exception: " + text;
+        }
+    };
+
+    var Iconpicker = function(element, options) {
+        this._id = Iconpicker._idCounter++;
+        this.element = $(element).addClass('iconpicker-element');
+        this._trigger('iconpickerCreate');
+        this.options = $.extend({}, Iconpicker.defaultOptions, this.element.data(), options);
+        this.options.templates = $.extend({}, Iconpicker.defaultOptions.templates, this.options.templates);
+        this.options.originalPlacement = this.options.placement;
+
+        // Iconpicker container element
+        this.container = (_helpers.isElement(this.options.container) ? $(this.options.container) : false);
+        if (this.container === false) {
+            this.container = (this.element.is('input') ? this.element.parent() : this.element);
+        }
+        if (this.container.addClass('iconpicker-container').is('.dropdown-menu')) {
+            this.options.placement = 'inline';
+        }
+
+        // Is the element an input? Should we search inside for any input?     
+        this.input = (this.element.is('input') ? this.element.addClass('iconpicker-input') : false);
+        if (this.input === false) {
+            this.input = (this.container.find(this.options.input));
+        }
+
+        // Plugin as component ?
+        this.component = this.container.find(this.options.component).addClass('iconpicker-component');
+        if (this.component.length === 0) {
+            this.component = false;
+        }else{
+            this.component.find('i').addClass(this.options.iconComponentBaseClass);
+        }
+
+        // Create popover and iconpicker HTML
+        this._createPopover();
+        this._createIconpicker();
+
+        if (this.getAcceptButton().length === 0) {
+            // disable this because we don't have accept buttons
+            this.options.mustAccept = false;
+        }
+
+        // Avoid CSS issues with input-group-addon(s)
+        if (this.container.is('.input-group')) {
+            this.container.parent().append(this.popover);
+        } else {
+            this.container.append(this.popover);
+        }
+
+        // Bind events
+        this._bindElementEvents();
+        this._bindWindowEvents();
+
+        // Refresh everything
+        this.update(this.options.selected);
+
+        if (this.isInline()) {
+            this.show();
+        }
+
+        this._trigger('iconpickerCreated');
+    };
+
+    // Instance identifier counter
+    Iconpicker._idCounter = 0;
+    
+    Iconpicker.defaultOptions = {
+        title: false, // Popover title (optional) only if specified in the template
+        selected: false, // use this value as the current item and ignore the original
+        defaultValue: false, // use this value as the current item if input or element item is empty
+        placement: 'bottom', //  (has some issues with auto and CSS). auto, top, bottom, left, right
+        collision: 'none', // If true, the popover will be repositioned to another position when collapses with the window borders
+        animation: true,
+        //hide iconpicker automatically when a value is picked. it is ignored if mustAccept is not false and the accept button is visible
+        hideOnSelect: false,
+        showFooter: false,
+        searchInFooter: false, // If true, the search will be added to the footer instead of the title
+        mustAccept: false, // only applicable when there's an iconpicker-btn-accept button in the popover footer
+        selectedCustomClass: 'bg-primary', // Appends this class when to the selected item
+        icons: [], // list of icons (declared at the bottom of this script for maintainability)
+        iconBaseClass: 'fa',
+        iconComponentBaseClass: 'fa fa-fw',
+        iconClassPrefix: 'fa-',
+        input: 'input', // children input selector
+        component: '.input-group-addon', // children component jQuery selector or object, relative to the parent element
+        container: false, //   Appends the popover to a specific element. If true, appends to the jQuery element.
+        // Plugin templates:
+        templates: {
+            popover: '<div class="iconpicker-popover popover"><div class="arrow"></div>' +
+                    '<div class="popover-title"></div><div class="popover-content"></div></div>',
+            footer: '<div class="popover-footer"></div>',
+            buttons: '<button class="iconpicker-btn iconpicker-btn-cancel btn btn-default btn-sm">Cancel</button>' +
+                    ' <button class="iconpicker-btn iconpicker-btn-accept btn btn-primary btn-sm">Accept</button>',
+            search: '<input type="search" class="form-control iconpicker-search" placeholder="Type to filter" />',
+            iconpicker: '<div class="iconpicker"><div class="iconpicker-items"></div></div>',
+            iconpickerItem: '<div class="iconpicker-item"><i></i></div>'
+        }
+    };
+
+    Iconpicker.batch = function(selector, method) {
+        var args = Array.prototype.slice.call(arguments, 2);
+        return $(selector).each(function() {
+            var $inst = $(this).data('iconpicker');
+            if (!!$inst) {
+                $inst[method].apply($inst, args);
+            }
+        });
+    };
+
+    Iconpicker.prototype = {
+        constructor: Iconpicker,
+        options: {},
+        _id: 0, // instance identifier for bind/unbind events
+        _trigger: function(name, opts) {
+            //triggers an event bound to the element
+            opts = opts || {};
+            this.element.trigger($.extend({
+                type: name,
+                iconpickerInstance: this
+            }, opts));
+            //console.log(name + ' triggered for instance #' + this._id);
+        },
+        _createPopover: function() {
+            this.popover = $(this.options.templates.popover);
+
+            // title (header)
+            var _title = this.popover.find('.popover-title');
+            if (!!this.options.title) {
+                _title.append($('<div class="popover-title-text">' + this.options.title + '</div>'));
+            }
+            if (!this.options.searchInFooter && !_helpers.isEmpty(this.options.templates.buttons)) {
+                _title.append(this.options.templates.search);
+            } else if (!this.options.title) {
+                _title.remove();
+            }
+
+            // footer
+            if (this.options.showFooter && !_helpers.isEmpty(this.options.templates.footer)) {
+                var _footer = $(this.options.templates.footer);
+                if (!_helpers.isEmpty(this.options.templates.search) && this.options.searchInFooter) {
+                    _footer.append($(this.options.templates.search));
+                }
+                if (!_helpers.isEmpty(this.options.templates.buttons)) {
+                    _footer.append($(this.options.templates.buttons));
+                }
+                this.popover.append(_footer);
+            }
+
+            if (this.options.animation === true) {
+                this.popover.addClass('fade');
+            }
+
+            return this.popover;
+        },
+        _createIconpicker: function() {
+            var _self = this;
+            this.iconpicker = $(this.options.templates.iconpicker);
+
+            var itemClickFn = function(e) {
+                var $this = $(this);
+                if ($this.is('.' + _self.options.iconBaseClass)) {
+                    $this = $this.parent();
+                }
+
+                _self._trigger('iconpickerSelect', {
+                    iconpickerItem: $this,
+                    iconpickerValue: _self.iconpickerValue
+                });
+
+                if (_self.options.mustAccept === false) {
+                    _self.update($this.data('iconpickerValue'));
+                    _self._trigger('iconpickerSelected', {
+                        iconpickerItem: this,
+                        iconpickerValue: _self.iconpickerValue
+                    });
+                } else {
+                    _self.update($this.data('iconpickerValue'), true);
+                }
+
+                if (_self.options.hideOnSelect && (_self.options.mustAccept === false)) {
+                    // only hide when the accept button is not present
+                    _self.hide();
+                }
+            };
+
+            for (var i in this.options.icons) {
+                var itemElement = $(this.options.templates.iconpickerItem);
+                itemElement.find('i')
+                        .addClass(_self.options.iconBaseClass + " " +
+                        this.options.iconClassPrefix + this.options.icons[i]);
+                itemElement.data('iconpickerValue', this.options.icons[i])
+                        .on('click.iconpicker', itemClickFn);
+                this.iconpicker.find('.iconpicker-items').append(itemElement
+                        .attr('title', '.' + this.getValue(this.options.icons[i])));
+            }
+
+            this.popover.find('.popover-content').append(this.iconpicker);
+
+            return this.iconpicker;
+        },
+        _isEventInsideIconpicker: function(e) {
+            var _t = $(e.target);
+            if ((!_t.hasClass('iconpicker-element')  ||
+                    (_t.hasClass('iconpicker-element') && !_t.is(this.element))) &&
+                    (_t.parents('.iconpicker-popover').length === 0)) {
+                return false;
+            }
+            return true;
+        },
+        _bindElementEvents: function() {
+            var _self = this;
+
+            this.getSearchInput().on('keyup', function() {
+                _self.filter($(this).val().toLowerCase());
+            });
+
+            this.getAcceptButton().on('click.iconpicker', function() {
+                var _picked = _self.iconpicker.find('.iconpicker-selected').get(0);
+
+                _self.update(_self.iconpickerValue);
+
+                _self._trigger('iconpickerSelected', {
+                    iconpickerItem: _picked,
+                    iconpickerValue: _self.iconpickerValue
+                });
+                if (!_self.isInline()) {
+                    _self.hide();
+                }
+            });
+            this.getCancelButton().on('click.iconpicker', function() {
+                if (!_self.isInline()) {
+                    _self.hide();
+                }
+            });
+
+            this.element.on('focus.iconpicker', function(e) {
+                _self.show();
+                e.stopPropagation();
+            });
+
+            if (this.hasComponent()) {
+                this.component.on('click.iconpicker', function() {
+                    _self.toggle();
+                });
+            }
+
+            if (this.hasInput()) {
+                // Bind input keyup event
+                this.input.on('keyup.iconpicker', function(e) {
+                    if (!_helpers.inArray(e.keyCode, [38, 40, 37, 39, 16, 17, 18, 9, 8, 91, 93, 20, 46, 186, 190, 46, 78, 188, 44, 86])) {
+                        _self.update();
+                    } else {
+                        _self._updateFormGroupStatus(_self.getValid(this.value) !== false);
+                    }
+                    //_self.hide();
+                });
+            }
+
+        },
+        _bindWindowEvents: function() {
+            var $doc = $(window.document);
+            var _self = this;
+
+            // Add a namespace to the document events so they can be identified
+            // later for every instance separately
+            var _eventNs = '.iconpicker.inst' + this._id;
+
+            $(window).on('resize.iconpicker' + _eventNs + ' orientationchange.iconpicker' + _eventNs, function(e) {
+                // reposition popover
+                if (_self.popover.hasClass('in')) {
+                    _self.updatePlacement();
+                }
+            });
+
+            if (!_self.isInline()) {
+                $doc.on('mouseup' + _eventNs, function(e) {
+                    if (!_self._isEventInsideIconpicker(e) && !_self.isInline()) {
+                        _self.hide();
+                    }
+                    e.stopPropagation();
+                    e.preventDefault();
+                    return false;
+                });
+            }
+
+            return false;
+        },
+        _unbindElementEvents: function() {
+            this.popover.off('.iconpicker');
+            this.element.off('.iconpicker');
+
+            if (this.hasInput()) {
+                this.input.off('.iconpicker');
+            }
+
+            if (this.hasComponent()) {
+                this.component.off('.iconpicker');
+            }
+
+            if (this.hasContainer()) {
+                this.container.off('.iconpicker');
+            }
+        },
+        _unbindWindowEvents: function() {
+            // destroy window and window.document bound events
+            $(window).off('.iconpicker.inst' + this._id);
+            $(window.document).off('.iconpicker.inst' + this._id);
+        },
+        updatePlacement: function(placement, collision) {
+            placement = placement || this.options.placement;
+            this.options.placement = placement; // set new placement
+            collision = collision || this.options.collision;
+            collision = (collision === true ? 'flip' : collision);
+
+            var _pos = {
+                // at: Defines which position (or side) on container element to align the
+                // popover element against: "horizontal vertical" alignment.
+                at: "right bottom",
+                // my: Defines which position (or side) on the popover being positioned to align
+                // with the container element: "horizontal vertical" alignment
+                my: "right top",
+                // of: Which element to position against.
+                of: this.hasInput() ? this.input : this.container,
+                // collision: When the positioned element overflows the window (or within element) 
+                // in some direction, move it to an alternative position.
+                collision: (collision === true ? 'flip' : collision),
+                // within: Element to position within, affecting collision detection.
+                within: window
+            };
+
+            // remove previous classes
+            this.popover.removeClass('inline topLeftCorner topLeft top topRight topRightCorner ' +
+                    'rightTop right rightBottom bottomRight bottomRightCorner ' +
+                    'bottom bottomLeft bottomLeftCorner leftBottom left leftTop');
+
+            if (typeof placement === 'object') {
+                // custom position ?
+                return this.popover.pos($.extend({}, _pos, placement));
+            }
+
+            switch (placement) {
+                case 'inline':
+                    {
+                        _pos = false;
+                    }
+                    break;
+                case 'topLeftCorner':
+                    {
+                        _pos.my = 'right bottom';
+                        _pos.at = 'left top';
+                    }
+                    break;
+
+                case 'topLeft':
+                    {
+                        _pos.my = 'left bottom';
+                        _pos.at = 'left top';
+                    }
+                    break;
+
+                case 'top':
+                    {
+                        _pos.my = 'center bottom';
+                        _pos.at = 'center top';
+                    }
+                    break;
+
+                case 'topRight':
+                    {
+                        _pos.my = 'right bottom';
+                        _pos.at = 'right top';
+                    }
+                    break;
+
+                case 'topRightCorner':
+                    {
+                        _pos.my = 'left bottom';
+                        _pos.at = 'right top';
+                    }
+                    break;
+
+                case 'rightTop':
+                    {
+                        _pos.my = 'left bottom';
+                        _pos.at = 'right center';
+                    }
+                    break;
+
+                case 'right':
+                    {
+                        _pos.my = 'left center';
+                        _pos.at = 'right center';
+                    }
+                    break;
+
+                case 'rightBottom':
+                    {
+                        _pos.my = 'left top';
+                        _pos.at = 'right center';
+                    }
+                    break;
+
+                case 'bottomRightCorner':
+                    {
+                        _pos.my = 'left top';
+                        _pos.at = 'right bottom';
+                    }
+                    break;
+
+                case 'bottomRight':
+                    {
+                        _pos.my = 'right top';
+                        _pos.at = 'right bottom';
+                    }
+                    break;
+                case 'bottom':
+                    {
+                        _pos.my = 'center top';
+                        _pos.at = 'center bottom';
+                    }
+                    break;
+
+                case 'bottomLeft':
+                    {
+                        _pos.my = 'left top';
+                        _pos.at = 'left bottom';
+                    }
+                    break;
+
+                case 'bottomLeftCorner':
+                    {
+                        _pos.my = 'right top';
+                        _pos.at = 'left bottom';
+                    }
+                    break;
+
+                case 'leftBottom':
+                    {
+                        _pos.my = 'right top';
+                        _pos.at = 'left center';
+                    }
+                    break;
+
+                case 'left':
+                    {
+                        _pos.my = 'right center';
+                        _pos.at = 'left center';
+                    }
+                    break;
+
+                case 'leftTop':
+                    {
+                        _pos.my = 'right bottom';
+                        _pos.at = 'left center';
+                    }
+                    break;
+
+                default:
+                    {
+                        return false;
+                    }
+                    break;
+
+            }
+
+            this.popover.css({
+                'display': (this.options.placement === 'inline') ? '' : 'block'
+            });
+
+            if (_pos !== false) {
+                this.popover.pos(_pos).css('maxWidth', $(window).width() - this.container.offset().left - 5);
+            } else {
+                //reset position
+                this.popover.css({
+                    'top': 'auto',
+                    'right': 'auto',
+                    'bottom': 'auto',
+                    'left': 'auto',
+                    'maxWidth': 'none'
+                });
+            }
+            this.popover.addClass(this.options.placement);
+
+            return true;
+        },
+        _updateComponents: function() {
+            // Update selected item
+            this.iconpicker.find('.iconpicker-item.iconpicker-selected')
+                    .removeClass('iconpicker-selected ' + this.options.selectedCustomClass);
+
+            this.iconpicker.find('.' + this.options.iconBaseClass + '.' +
+                    this.options.iconClassPrefix + this.iconpickerValue).parent()
+                    .addClass('iconpicker-selected ' + this.options.selectedCustomClass);
+
+            // Update component item
+            if (this.hasComponent()) {
+                var icn = this.component.find('i');
+                if (icn.length > 0) {
+                    icn.attr('class', this.options.iconComponentBaseClass + ' ' + this.getValue());
+                } else {
+                    this.component.html(this.getValueHtml());
+                }
+            }
+
+        },
+        _updateFormGroupStatus: function(isValid) {
+            if (this.hasInput()) {
+                if (isValid !== false) {
+                    // Remove form-group error class if any
+                    this.input.parents('.form-group:first').removeClass('has-error');
+                } else {
+                    this.input.parents('.form-group:first').addClass('has-error');
+                }
+                return true;
+            }
+            return false;
+        },
+        getValid: function(val) {
+            // here we must validate the value (you may change this validation
+            // to suit your needs
+            if (!_helpers.isString(val)) {
+                val = '';
+            }
+            
+            var isEmpty = (val==='');
+            
+            // trimmed and sanitized string without the icon class prefix
+            val = $.trim(val.replace(this.options.iconClassPrefix, ''));
+
+            if (_helpers.inArray(val, this.options.icons) || isEmpty) {
+                return val;
+            }
+            return false;
+        },
+        /**
+         * Sets the internal item value and updates everything, excepting the input or element.
+         * For doing so, call setSourceValue() or update() instead
+         */
+        setValue: function(val) {
+            // sanitize first
+            var _val = this.getValid(val);
+            if (_val !== false) {
+                this.iconpickerValue = _val;
+                this._trigger('iconpickerSetValue', {
+                    iconpickerValue: _val
+                });
+                return this.iconpickerValue;
+            } else {
+                this._trigger('iconpickerInvalid', {
+                    iconpickerValue: val
+                });
+                return false;
+            }
+        },
+        /**
+         * Returns the formatted item value
+         * @returns string
+         */
+        getValue: function(val) {
+            return this.options.iconClassPrefix + (val ? val : this.iconpickerValue);
+        },
+        getValueHtml: function() {
+            return '<i class="' + this.options.iconBaseClass + " " + this.getValue() + '"></i>';
+        },
+        /**
+         * Calls setValue and if it's a valid item value, sets the input or element value
+         */
+        setSourceValue: function(val) {
+            val = this.setValue(val);
+            if ((val !== false) && (val !== '')) {
+                if (this.hasInput()) {
+                    this.input.val(this.getValue());
+                } else {
+                    this.element.data('iconpickerValue', this.getValue());
+                }
+                this._trigger('iconpickerSetSourceValue', {
+                    iconpickerValue: val
+                });
+            }
+            return val;
+        },
+        /**
+         * Returns the input or element item value, without formatting, or defaultValue
+         * if it's empty string, undefined, false or null
+         * @param {type} defaultValue
+         * @returns string|mixed
+         */
+        getSourceValue: function(defaultValue) {
+            // returns the input or element value, as string
+            defaultValue = defaultValue || this.options.defaultValue;
+            var val = defaultValue;
+
+            if (this.hasInput()) {
+                val = this.input.val();
+            } else {
+                val = this.element.data('iconpickerValue');
+            }
+            if ((val === undefined) || (val === '') || (val === null) || (val === false)) {
+                // if not defined or empty, return default
+                val = defaultValue;
+            }
+            return val;
+        },
+        hasInput: function() {
+            return (this.input !== false);
+        },
+        hasComponent: function() {
+            return (this.component !== false);
+        },
+        hasContainer: function() {
+            return (this.container !== false);
+        },
+        getAcceptButton: function() {
+            return this.popover.find('.iconpicker-btn-accept');
+        },
+        getCancelButton: function() {
+            return this.popover.find('.iconpicker-btn-cancel');
+        },
+        getSearchInput: function() {
+            return this.popover.find('.iconpicker-search');
+        },
+        filter: function(filterText) {
+            if (_helpers.isEmpty(filterText)) {
+                this.iconpicker.find('.iconpicker-item').show();
+                return $(false);
+            } else {
+                var found = [];
+                this.iconpicker.find('.iconpicker-item').each(function() {
+                    var $this = $(this);
+                    var text = $this.attr('title').toLowerCase();
+                    var regex = false;
+                    try {
+                        regex = new RegExp(filterText, 'g');
+                    } catch (e) {
+                        regex = false;
+                    }
+                    if ((regex !== false) && text.match(regex)) {
+                        found.push($this);
+                        $this.show();
+                    } else {
+                        $this.hide();
+                    }
+                });
+                return found;
+            }
+        },
+        show: function() {
+            if (this.popover.hasClass('in')) {
+                return false;
+            }
+            // hide other non-inline pickers
+            $.iconpicker.batch($('.iconpicker-popover.in:not(.inline)').not(this.popover), 'hide');
+
+            this._trigger('iconpickerShow');
+            this.updatePlacement();
+            this.popover.addClass('in');
+            setTimeout($.proxy(function() {
+                this.popover.css('display', this.isInline() ? '' : 'block');
+                this._trigger('iconpickerShown');
+            }, this), this.options.animation ? 300 : 1); // animation duration
+        },
+        hide: function() {
+            if (!this.popover.hasClass('in')) {
+                return false;
+            }
+            this._trigger('iconpickerHide');
+            this.popover.removeClass('in');
+            setTimeout($.proxy(function() {
+                this.popover.css('display', 'none');
+                this.getSearchInput().val('');
+                this.filter(''); // clear filter
+                this._trigger('iconpickerHidden');
+            }, this), this.options.animation ? 300 : 1);
+        },
+        toggle: function() {
+            if (this.popover.is(":visible")) {
+                this.hide();
+            } else {
+                this.show(true);
+            }
+        },
+        update: function(val, updateOnlyInternal) {
+            val = (val ? val :  this.getSourceValue(this.iconpickerValue));
+            // reads the input or element value again and tries to update the plugin
+            // fallback to the current selected item value
+            this._trigger('iconpickerUpdate');
+
+            if (updateOnlyInternal === true) {
+                val = this.setValue(val);
+            } else {
+                val = this.setSourceValue(val);
+                this._updateFormGroupStatus(val !== false);
+            }
+
+            if (val !== false) {
+                this._updateComponents();
+            }
+
+            this._trigger('iconpickerUpdated');
+            return val;
+        },
+        destroy: function() {
+            this._trigger('iconpickerDestroy');
+
+            // unbinds events and resets everything to the initial state,
+            // including component mode
+            this.element.removeData('iconpicker').removeData('iconpickerValue').removeClass('iconpicker-element');
+
+            this._unbindElementEvents();
+            this._unbindWindowEvents();
+
+            $(this.popover).remove();
+
+            this._trigger('iconpickerDestroyed');
+        },
+        disable: function() {
+            if (this.hasInput()) {
+                this.input.prop('disabled', true);
+                return true;
+            }
+            return false;
+        },
+        enable: function() {
+            if (this.hasInput()) {
+                this.input.prop('disabled', false);
+                return true;
+            }
+            return false;
+        },
+        isDisabled: function() {
+            if (this.hasInput()) {
+                return (this.input.prop('disabled') === true);
+            }
+            return false;
+        },
+        isInline: function() {
+            return (this.options.placement === 'inline') || (this.popover.hasClass('inline'));
+        }
+    };
+
+    $.iconpicker = Iconpicker;
+
+    // jQuery plugin
+    $.fn.iconpicker = function(options) {
+        return this.each(function() {
+            var $this = $(this);
+            if (!$this.data('iconpicker')) {
+                // create plugin instance (only if not exists) and expose the entire instance API
+                $this.data('iconpicker', new Iconpicker(this, ((typeof options === 'object') ? options : {})));
+            }
+        });
+    };
+
+    // List of all Font Awesome icons without class prefix
+    Iconpicker.defaultOptions.icons = [
+        'adjust', 'adn', 'align-center', 'align-justify', 'align-left', 'align-right', 'ambulance',
+        'anchor', 'android', 'angle-double-down', 'angle-double-left', 'angle-double-right', 'angle-double-up',
+        'angle-down', 'angle-left', 'angle-right', 'angle-up', 'apple', 'archive', 'arrow-circle-down',
+        'arrow-circle-left', 'arrow-circle-o-down', 'arrow-circle-o-left', 'arrow-circle-o-right',
+        'arrow-circle-o-up', 'arrow-circle-right', 'arrow-circle-up', 'arrow-down', 'arrow-left',
+        'arrow-right', 'arrow-up', 'arrows', 'arrows-alt', 'arrows-h', 'arrows-v', 'asterisk',
+        'automobile', 'backward', 'ban', 'bank', 'bar-chart-o', 'barcode', 'bars', 'beer',
+        'behance', 'behance-square', 'bell', 'bell-o', 'bitbucket', 'bitbucket-square', 'bitcoin',
+        'bold', 'bolt', 'bomb', 'book', 'bookmark', 'bookmark-o', 'briefcase', 'btc',
+        'bug', 'building', 'building-o', 'bullhorn', 'bullseye', 'cab', 'calendar', 'calendar-o',
+        'camera', 'camera-retro', 'car', 'caret-down', 'caret-left', 'caret-right',
+        'caret-square-o-down', 'caret-square-o-left', 'caret-square-o-right', 'caret-square-o-up',
+        'caret-up', 'certificate', 'chain', 'chain-broken', 'check', 'check-circle', 'check-circle-o',
+        'check-square', 'check-square-o', 'chevron-circle-down', 'chevron-circle-left',
+        'chevron-circle-right', 'chevron-circle-up', 'chevron-down', 'chevron-left',
+        'chevron-right', 'chevron-up', 'child', 'circle', 'circle-o', 'circle-o-notch',
+        'circle-thin', 'clipboard', 'clock-o', 'cloud', 'cloud-download', 'cloud-upload',
+        'cny', 'code', 'code-fork', 'codepen', 'coffee', 'cog', 'cogs', 'columns',
+        'comment', 'comment-o', 'comments', 'comments-o', 'compass', 'compress', 'copy',
+        'credit-card', 'crop', 'crosshairs', 'css3', 'cube', 'cubes', 'cut', 'cutlery',
+        'dashboard', 'database', 'dedent', 'delicious', 'desktop', 'deviantart', 'digg',
+        'dollar', 'dot-circle-o', 'download', 'dribbble', 'dropbox', 'drupal', 'edit', 'eject',
+        'ellipsis-h', 'ellipsis-v', 'empire', 'envelope', 'envelope-o', 'envelope-square',
+        'eraser', 'eur', 'euro', 'exchange', 'exclamation', 'exclamation-circle',
+        'exclamation-triangle', 'expand', 'external-link', 'external-link-square', 'eye',
+        'eye-slash', 'facebook', 'facebook-square', 'fast-backward', 'fast-forward', 'fax',
+        'female', 'fighter-jet', 'file', 'file-archive-o', 'file-audio-o', 'file-code-o',
+        'file-excel-o', 'file-image-o', 'file-movie-o', 'file-o', 'file-pdf-o', 'file-photo-o',
+        'file-picture-o', 'file-powerpoint-o', 'file-sound-o', 'file-text', 'file-text-o',
+        'file-video-o', 'file-word-o', 'file-zip-o', 'files-o', 'film', 'filter', 'fire',
+        'fire-extinguisher', 'flag', 'flag-checkered', 'flag-o', 'flash', 'flask', 'flickr',
+        'floppy-o', 'folder', 'folder-o', 'folder-open', 'folder-open-o', 'font', 'forward',
+        'foursquare', 'frown-o', 'gamepad', 'gavel', 'gbp', 'ge', 'gear', 'gears', 'gift',
+        'git', 'git-square', 'github', 'github-alt', 'github-square', 'gittip', 'glass', 'globe',
+        'google', 'google-plus', 'google-plus-square', 'graduation-cap', 'group', 'h-square', 'hacker-news',
+        'hand-o-down', 'hand-o-left', 'hand-o-right', 'hand-o-up', 'hdd-o', 'header', 'headphones',
+        'heart', 'heart-o', 'history', 'home', 'hospital-o', 'html5', 'image', 'inbox', 'indent',
+        'info', 'info-circle', 'inr', 'instagram', 'institution', 'italic', 'joomla', 'jpy',
+        'jsfiddle', 'key', 'keyboard-o', 'krw', 'language', 'laptop', 'leaf', 'legal', 'lemon-o',
+        'level-down', 'level-up', 'life-bouy', 'life-ring', 'life-saver', 'lightbulb-o', 'link',
+        'linkedin', 'linkedin-square', 'linux', 'list', 'list-alt', 'list-ol', 'list-ul', 'location-arrow',
+        'lock', 'long-arrow-down', 'long-arrow-left', 'long-arrow-right', 'long-arrow-up', 'magic',
+        'magnet', 'mail-forward', 'mail-reply', 'mail-reply-all', 'male', 'map-marker', 'maxcdn',
+        'medkit', 'meh-o', 'microphone', 'microphone-slash', 'minus', 'minus-circle', 'minus-square',
+        'minus-square-o', 'mobile', 'mobile-phone', 'money', 'moon-o', 'mortar-board', 'music',
+        'navicon', 'openid', 'outdent', 'pagelines', 'paper-plane', 'paper-plane-o', 'paperclip',
+        'paragraph', 'paste', 'pause', 'paw', 'pencil', 'pencil-square', 'pencil-square-o', 'phone',
+        'phone-square', 'photo', 'picture-o', 'pied-piper', 'pied-piper-alt', 'pied-piper-square',
+        'pinterest', 'pinterest-square', 'plane', 'play', 'play-circle', 'play-circle-o', 'plus',
+        'plus-circle', 'plus-square', 'plus-square-o', 'power-off', 'print', 'puzzle-piece', 'qq',
+        'qrcode', 'question', 'question-circle', 'quote-left', 'quote-right', 'ra', 'random',
+        'rebel', 'recycle', 'reddit', 'reddit-square', 'refresh', 'renren', 'reorder', 'repeat',
+        'reply', 'reply-all', 'retweet', 'rmb', 'road', 'rocket', 'rotate-left', 'rotate-right',
+        'rouble', 'rss', 'rss-square', 'rub', 'ruble', 'rupee', 'save', 'scissors', 'search',
+        'search-minus', 'search-plus', 'send', 'send-o', 'share', 'share-alt', 'share-alt-square',
+        'share-square', 'share-square-o', 'shield', 'shopping-cart', 'sign-in', 'sign-out', 'signal',
+        'sitemap', 'skype', 'slack', 'sliders', 'smile-o', 'sort', 'sort-alpha-asc', 'sort-alpha-desc',
+        'sort-amount-asc', 'sort-amount-desc', 'sort-asc', 'sort-desc', 'sort-down', 'sort-numeric-asc',
+        'sort-numeric-desc', 'sort-up', 'soundcloud', 'space-shuttle', 'spinner', 'spoon', 'spotify',
+        'square', 'square-o', 'stack-exchange', 'stack-overflow', 'star', 'star-half', 'star-half-empty',
+        'star-half-full', 'star-half-o', 'star-o', 'steam', 'steam-square', 'step-backward', 'step-forward',
+        'stethoscope', 'stop', 'strikethrough', 'stumbleupon', 'stumbleupon-circle', 'subscript',
+        'suitcase', 'sun-o', 'superscript', 'support', 'table', 'tablet', 'tachometer', 'tag',
+        'tags', 'tasks', 'taxi', 'tencent-weibo', 'terminal', 'text-height', 'text-width', 'th',
+        'th-large', 'th-list', 'thumb-tack', 'thumbs-down', 'thumbs-o-down', 'thumbs-o-up', 'thumbs-up',
+        'ticket', 'times', 'times-circle', 'times-circle-o', 'tint', 'toggle-down', 'toggle-left',
+        'toggle-right', 'toggle-up', 'trash-o', 'tree', 'trello', 'trophy', 'truck', 'try', 'tumblr',
+        'tumblr-square', 'turkish-lira', 'twitter', 'twitter-square', 'umbrella', 'underline', 'undo',
+        'university', 'unlink', 'unlock', 'unlock-alt', 'unsorted', 'upload', 'usd', 'user', 'user-md',
+        'users', 'video-camera', 'vimeo-square', 'vine', 'vk', 'volume-down', 'volume-off', 'volume-up',
+        'warning', 'wechat', 'weibo', 'weixin', 'wheelchair', 'windows', 'won', 'wordpress', 'wrench',
+        'xing', 'xing-square', 'yahoo', 'yen', 'youtube', 'youtube-play', 'youtube-square'
+    ];
+}));
+define('workspace/fnList',["./widget", "bootstrap-iconpicker"], function(widget, iconpicker) {
+
+    Variable = function(name) {
+        if (!(this instanceof Variable)) {
+            return new Variable(name);
+        }
+        this.txt = name
+    }
+
+    Default_fn = function(name, arg) {
+        if (!(this instanceof Default_fn)) {
+            return new Default_fn(name, arg);
+        }
+        var txt = ""
+        if (name != null)
+            txt = name
+        if (arg != null) {
+            if (name != null)
+                txt += "("
+            else
+                txt += "["
+            arg.forEach(function(e, i) {
+                if (e.txt != null) {
+                    txt += e.txt
+                } else {
+                    txt += JSON.stringify(e)
+                }
+                if (i != arg.length - 1)
+                    txt += ','
+            })
+            if (name != null)
+                txt += ")"
+            else
+                txt += "]"
+        }
+        this.txt = txt
+    }
+
 
 
     var validations = {
@@ -44620,6 +46701,10 @@ define('workspace/fnList',["./widget"], function(widget) {
         v_float: {
             fn: valid_float,
             msg: "This is not a valid float!"
+        },
+        v_char: {
+            fn: valid_char,
+            msg: "This is not a valid char!"
         },
         v_file: {
             fn: valid_file,
@@ -44648,100 +46733,178 @@ define('workspace/fnList',["./widget"], function(widget) {
 
     }
 
-    SubList = function(title, fns) {
+    Argument = function(title, type, validation, value, param) {
+        if (!(this instanceof Argument)) {
+            return new Argument(title, type, validation, value, param);
+        }
+        this.title = title
+        this.type = type
+        this.validation = validation
+        this.value = value
+        this.param = (param == null) ? {} : param
+    }
+
+    SubList = function(title, icon, fns) {
         if (!(this instanceof SubList)) {
-            return new SubList(title, fns);
+            return new SubList(title, icon, fns);
         }
         this.title = title
         this.fns = fns
-        this.icon = "fa-sitemap"
+        this.icon = icon
     }
 
     var list = [
-        SubList("Table", [
+        SubList("Table", "fa-table", [
             FunctionCreator({
                 'title': 'New Table',
                 'icon': 'fa-table',
                 'argument': {
-                    nbcol: {
-                        'title': 'Nb Col',
-                        'validation': validations.v_integer
-                    }
+                    nbcol: Argument('Nb col', null, validations.v_integer),
                 },
-                'callback': function(fn, widget) {
-                    widget.addTable(this.variable_name, fn.nbcol.value)
+                'callback': function() {
+                    this.widget.addTable(this.fnSelected.variable_name, this.inputs.nbcol.value)
                 }
             }),
             FunctionCreator({
                 'title': 'Table from CSV FILE',
-                'icon': 'fa-table',
+                'icon': 'fa-file-text',
                 'argument': {
-                    file: {
-                        'title': 'File',
-                        'type': 'file',
-                        'validation': validations.v_file
-                    },
-                    header: {
-                        'title': 'First Row Header',
-                        'type': 'checkbox',
-                        'validation': null
-                    }
+                    file: Argument('File', 'file', validations.v_file),
+                    header: Argument('First Row Header', 'checkbox', null),
+                    separator: Argument('separator', null, validations.v_char, ","),
                 },
-                'callback': function(fn, widget) {
+                'callback': function() {
                     var reader = new FileReader()
-                    var variable_name = this.variable_name
+                    var variable_name = this.fnSelected.variable_name
+                    var widget = this.widget
+                    var inputs = this.inputs
                     reader.onload = function(e) {
                         var text = reader.result;
-                        console.log(fn.header.value)
-                        widget.addTableWithData(variable_name, processData(text), fn.header.value)
+                        widget.addTableWithData(variable_name, processData(text), inputs.header.value)
                     }
-                    reader.readAsBinaryString(this.file)
+                    reader.readAsBinaryString(this.fnSelected.file)
 
                 }
             }),
             FunctionCreator({
                 'title': 'Table from CSV URL',
-                'icon': 'fa-table',
+                'icon': 'fa-external-link-square',
                 'argument': {
-                    url: {
-                        'title': 'URL',
-                        'validation': validations.v_url
-                    },
-                    header: {
-                        'title': 'First Row Header',
-                        'type': 'checkbox',
-                        'validation': null
-                    }
+                    url: Argument('url', null, validations.v_url),
+                    header: Argument('First Row Header', 'checkbox', null),
+                    separator: Argument('separator', null, validations.v_char, ",")
                 },
-                'callback': function(fn ,widget) {
-                    processURL(this.variable_name, fn , widget)
+                'callback': function() {
+                    processURL(this.fnSelected.variable_name, this.inputs, this.widget)
+                }
+            }),
+            FunctionCreator({
+                'title': 'Icon Table',
+                'icon': 'fa-smile-o',
+                'argument': {
+                    icon: Argument('fa-adjust', null, null, 'fa-angle-down', {
+                        style: 'icp icp-auto'
+                    }),
+                    data: Argument('Data', null, null),
+                    //iconTrue: Argument('Icon False', null, null),
+                    //condition:Argument('Condition', null, null),
+                    text: Argument('Text', null, null),
+                },
+                'callback': function() {
+                    var i = this.inputs
+                    var icon = i.icon.value
+                    var text = i.text.value
+                    var data = i.data.value
+                    var f1 = Default_fn(null, [Default_fn("icon", ["smile-o"]), Default_fn("pourcentage", [Variable(data)])])
+                    f1.txt = "[" + f1.txt + "]"
+                    var f = Default_fn("table", [
+
+                        f1, {
+                            col: [text],
+                            grid: 0,
+                            align: "center"
+                        }
+                    ]).txt
+                    this.widget.addToEditorText(this.fnSelected.variable_name, f, true)
                 }
             })
         ]),
-        SubList("Math", [FunctionCreator({
+        SubList("Array", "fa-list", [{}]),
+        SubList("Filter", "fa-filter", [{}]),
+        SubList("Math", "fa-plus", [
+            FunctionCreator({
                 'title': 'sum',
-                'argument': [{
-                    'title': 'x',
-                    'validation': validations.v_float
-                }, {
-                    'title': 'y',
-                    'validation': validations.v_float
-                }],
-                'callback': function(fn , widget) {
-                   widget.addToEditorText(defaut_fn("sum", fn))
+                'argument': [
+                    Argument('x', null, validations.v_float),
+                    Argument('y', null, validations.v_file)
+                ],
+                'callback': function() {
+                    this.widget.addToEditorText(null, input_to_fn("sum", this.inputs))
+                }
+            })
+        ]),
+        SubList("Plot", "fa-bar-chart-o", [{}]),
+        SubList("Statistics", "fa-gear", [
+            FunctionCreator({
+                'title': 'Descriptive',
+                'argument': [
+                    Argument('Data', null, null),
+                ],
+                'callback': function() {
+                    this.widget.addToEditorText(null, input_to_fn("descriptive", this.inputs))
                 }
             }),
-            SubList("Stats", [FunctionCreator({
-                'title': 'descriptive',
-                'argument': [{
-                    'title': 'data',
-                    'validation': null
-                },],
-                'callback': function(fn , widget) {
-                    widget.addToEditorText(defaut_fn("descriptive", fn))
+            FunctionCreator({
+                'title': 'Mean',
+                'argument': [
+                    Argument('Data', null, null),
+                ],
+                'callback': function() {
+                    this.widget.addToEditorText(this.fnSelected.variable_name, input_to_fn("mean", this.inputs))
                 }
-            })])
-        ])
+            }),
+            FunctionCreator({
+                'title': 'Variance',
+                'argument': [
+                    Argument('data', null, null),
+                ],
+                'callback': function() {
+                    this.widget.addToEditorText(null, input_to_fn("mean", this.inputs))
+                }
+            }),
+            FunctionCreator({
+                'title': 'Mode',
+                'argument': [
+                    Argument('data', null, null),
+                ],
+                'callback': function() {
+                    this.widget.addToEditorText(null, input_to_fn("mean", this.inputs))
+                }
+            }),
+            FunctionCreator({
+                'title': 'Max',
+                'argument': [
+                    Argument('data', null, null),
+                ],
+                'callback': function() {
+                    this.widget.addToEditorText(null, input_to_fn("mean", this.inputs))
+                }
+            }),
+            FunctionCreator({
+                'title': 'Min',
+                'argument': [
+                    Argument('data', null, null),
+                ],
+                'callback': function() {
+                    this.widget.addToEditorText(null, input_to_fn("mean", this.inputs))
+                }
+            }),
+            SubList("Tests", "fa-sitemap", [{}]),
+        ]),
+        SubList("Finance", "fa-usd", [{}]),
+        SubList("Date", "fa-calendar", [{}]),
+        SubList("Text", "fa-italic", [{}]),
+
     ]
 
 
@@ -44750,7 +46913,7 @@ define('workspace/fnList',["./widget"], function(widget) {
     }
 
     function valid_float(value) {
-        if (value[0]=="=") return value
+        if (value[0] == "=") return value
         var FLOAT_REGEXP = /^\-?\d+((\.|\,)\d+)?$/;
         if (FLOAT_REGEXP.test(value)) {
             return parseFloat(value.replace(',', '.'));
@@ -44759,8 +46922,16 @@ define('workspace/fnList',["./widget"], function(widget) {
         }
     }
 
+    function valid_char(value) {
+        if (value.length == 1) {
+            return value
+        } else {
+            return undefined;
+        }
+    }
+
     function valid_integer(value) {
-        if (value[0]=="=") return value
+        if (value[0] == "=") return value
         var REGEXP = /^\-?\d+$/;
         return REGEXP.test(value)
     }
@@ -44809,19 +46980,29 @@ define('workspace/fnList',["./widget"], function(widget) {
         console.log(JSON.stringify(file))
     }
 
-    function defaut_fn(name,arg){
+    function input_to_fn(name, arg) {
         var txt = name + "("
-        arg.forEach(function (e,i){
-            console.log(JSON.stringify(e))
+        arg.forEach(function(e, i) {
             txt += e.value
-            if (i!=arg.length-1)
+            if (i != arg.length - 1)
                 txt += ','
-        })    
+        })
         txt += ')'
         return txt
     }
 
-    function processURL(variable_name, fn , widget) {
+    function default_fn(name, arg) {
+        var txt = name + "("
+        arg.forEach(function(e, i) {
+            txt += JSON.stringify(e)
+            if (i != arg.length - 1)
+                txt += ','
+        })
+        txt += ')'
+        return txt
+    }
+
+    function processURL(variable_name, fn, widget) {
 
         // Create the XHR object.
         function createCORSRequest(method, url) {
@@ -44946,8 +47127,7 @@ define('workspace/generator',["jquery", "validator", "./fnList"], function($, va
 
 
                 $scope.update = function(inputs) {
-                    console.log(inputs)
-                    $scope.fnSelected.callback(inputs, $scope.widget)
+                    $scope.fnSelected.callback.call($scope)
                     $scope.hide = true
                 };
 
@@ -44969,6 +47149,10 @@ define('workspace/generator',["jquery", "validator", "./fnList"], function($, va
                         $scope.inputs = angular.copy(fn.argument)
                         $scope.fnSelected = fn
                     }
+                    angular.element(document).ready(function() {
+                        $('.icp-auto').iconpicker();
+                    });
+
                 }
                 $scope.selectedInput = function(elm) {
                     selectedInput = elm
@@ -44978,6 +47162,9 @@ define('workspace/generator',["jquery", "validator", "./fnList"], function($, va
                         return value
                     }
                 }
+
+
+
                 $scope.isSelectedInput = function(elm) {
                     return selectedInput == elm
                 }
@@ -45054,7 +47241,7 @@ define('workspace/workspace',[
 
 
     function initComposent(app) {
-
+       
         generator.init(app);
         widget.init(app);
         $("#formulaToggle").click(
@@ -45755,7 +47942,7 @@ requirejs.config({
         'rickshaw': {
             deps: ['vendor/d3.layout.min', "bootstrap"],
         },
-         'filereader': {
+        'filereader': {
             deps: ['jquery'],
         },
         'bootstrap': {
@@ -45773,6 +47960,12 @@ requirejs.config({
         'jquery.handsontable.full': {
             deps: ['jquery']
         },
+        'bootstrap-iconpicker': {
+            deps: ['bootstrap','position-icon']
+        },
+        'hotkey': {
+            deps: ['angular']
+        }
     },
 
     paths: {
@@ -45788,6 +47981,7 @@ require([
         'jquery',
         'jquery-ui',
         'bootstrap',
+        'hotkey',
         'codemirror',
         'filereader',
         'jquery.handsontable.full',
@@ -45806,7 +48000,7 @@ require([
         'workspace/widget',
         'workspace/workspace',
         'jquery.mockjax',
-       // 'workspace/mock',
+        //'workspace/mock',
         'workspace/mquery',
         'workspace/fnList',
         "workspace/generator",
@@ -45814,7 +48008,7 @@ require([
     ],
     function() {
 
-    
+
 
     });
 

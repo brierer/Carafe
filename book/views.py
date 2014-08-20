@@ -84,6 +84,7 @@ class UpdateBook(UpdateView):
 
 # AJAX
 def post_calc(request):
+    print "salut"
     if request.method == 'POST':
         form = EquationsForm(request.POST)
         res = form.update_equations(request.user)

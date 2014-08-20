@@ -54,8 +54,8 @@ def home(request):
             return render(request, 'home/login.html', locals())
     else:
         form = ConnexionForm()
-
-    return render(request, 'home/home.html', locals())
+    return render(request, 'home/coming.html', locals())    
+    #return render(request, 'home/home.html', locals())
 
 
 @require_mtl

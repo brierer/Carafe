@@ -1,381 +1,128 @@
-        <nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
-            <div class="navbar-header">
-                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".sidebar-collapse">
-                    <spanx class="sr-only">Toggle navigation</span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                    </button>
-                    <a id="formulaToggle" class="navbar-brand"> <i class="fa fa-bars fa-fw"></i> {{ book }} {% if read_only %} | Read Only {% endif %}</a>
-                </div>
-                <!-- /.navbar-header -->
+<nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".sidebar-collapse">
+            <spanx class="sr-only">Toggle navigation
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </spanx>
+        </button>
+        <a id="formulaToggle" class="navbar-brand navbar-static-side"> <i class="fa fa-bars fa-fw"></i>{{ book }} {% if read_only %} | Read Only {% endif %}
+        </a>
+    </div>
 
-                <ul class="nav navbar-top-links navbar-right">
-                  <li class="dropdown">
-                    <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-                        <i class="fa fa-eye fa-fw"></i>  <i class="fa fa-caret-down"></i>
-                    </a>
-                    <ul class="dropdown-menu dropdown-user">
-                        <li><a id="equationToggle"><i class="fa fa-list-ul fa-fw"></i>Equations</a>
-                        </li>
-                        <li><a id="dashBoardToggle"><i class="fa fa-dashboard fa-fw"></i>Dashboard</a>
-                        </li>
-                    </ul>
-                    <!-- /.dropdown-user -->
-                </li>
+    <!-- /.navbar-header -->
 
-                <li class="dropdown">
-                    <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-                        <i class="fa fa-envelope fa-fw"></i>  <i class="fa fa-caret-down"></i>
-                    </a>
-                    <ul class="dropdown-menu dropdown-messages">
-                        <li>
-                            <a href="#">
-                                <div>
-                                    <strong>John Smith</strong>
-                                    <span class="pull-right text-muted">
-                                        <em>Yesterday</em>
-                                    </span>
-                                </div>
-                                <div>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque eleifend...</div>
-                            </a>
-                        </li>
-                        <li class="divider"></li>
-                        <li>
-                            <a href="#">
-                                <div>
-                                    <strong>John Smith</strong>
-                                    <span class="pull-right text-muted">
-                                        <em>Yesterday</em>
-                                    </span>
-                                </div>
-                                <div>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque eleifend...</div>
-                            </a>
-                        </li>
-                        <li class="divider"></li>
-                        <li>
-                            <a href="#">
-                                <div>
-                                    <strong>John Smith</strong>
-                                    <span class="pull-right text-muted">
-                                        <em>Yesterday</em>
-                                    </span>
-                                </div>
-                                <div>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque eleifend...</div>
-                            </a>
-                        </li>
-                        <li class="divider"></li>
-                        <li>
-                            <a class="text-center" href="#">
-                                <strong>Read All Messages</strong>
-                                <i class="fa fa-angle-right"></i>
-                            </a>
-                        </li>
-                    </ul>
-                    <!-- /.dropdown-messages -->
+    <ul class="nav navbar-top-links navbar-right">
+        <li class="dropdown">
+            <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                <i class="fa fa-eye fa-fw"></i>  <i class="fa fa-caret-down"></i>
+            </a>
+            <ul class="dropdown-menu dropdown-user">
+                <li><a id="equationToggle"><i class="fa fa-list-ul fa-fw"></i>Equations</a>
                 </li>
-                <!-- /.dropdown -->
-                <li class="dropdown">
-                    <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-                        <i class="fa fa-tasks fa-fw"></i>  <i class="fa fa-caret-down"></i>
-                    </a>
-                    <ul class="dropdown-menu dropdown-tasks">
-                        <li>
-                            <a href="#">
-                                <div>
-                                    <p>
-                                        <strong>Task 1</strong>
-                                        <span class="pull-right text-muted">40% Complete</span>
-                                    </p>
-                                    <div class="progress progress-striped active">
-                                        <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width: 40%">
-                                            <span class="sr-only">40% Complete (success)</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </a>
-                        </li>
-                        <li class="divider"></li>
-                        <li>
-                            <a href="#">
-                                <div>
-                                    <p>
-                                        <strong>Task 2</strong>
-                                        <span class="pull-right text-muted">20% Complete</span>
-                                    </p>
-                                    <div class="progress progress-striped active">
-                                        <div class="progress-bar progress-bar-info" role="progressbar" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100" style="width: 20%">
-                                            <span class="sr-only">20% Complete</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </a>
-                        </li>
-                        <li class="divider"></li>
-                        <li>
-                            <a href="#">
-                                <div>
-                                    <p>
-                                        <strong>Task 3</strong>
-                                        <span class="pull-right text-muted">60% Complete</span>
-                                    </p>
-                                    <div class="progress progress-striped active">
-                                        <div class="progress-bar progress-bar-warning" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 60%">
-                                            <span class="sr-only">60% Complete (warning)</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </a>
-                        </li>
-                        <li class="divider"></li>
-                        <li>
-                            <a href="#">
-                                <div>
-                                    <p>
-                                        <strong>Task 4</strong>
-                                        <span class="pull-right text-muted">80% Complete</span>
-                                    </p>
-                                    <div class="progress progress-striped active">
-                                        <div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100" style="width: 80%">
-                                            <span class="sr-only">80% Complete (danger)</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </a>
-                        </li>
-                        <li class="divider"></li>
-                        <li>
-                            <a class="text-center" href="#">
-                                <strong>See All Tasks</strong>
-                                <i class="fa fa-angle-right"></i>
-                            </a>
-                        </li>
-                    </ul>
-                    <!-- /.dropdown-tasks -->
+                <li><a id="dashBoardToggle"><i class="fa fa-dashboard fa-fw"></i>Dashboard</a>
                 </li>
-                <!-- /.dropdown -->
-                <li class="dropdown">
-                    <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-                        <i class="fa fa-bell fa-fw"></i>  <i class="fa fa-caret-down"></i>
-                    </a>
-                    <ul class="dropdown-menu dropdown-alerts">
-                        <li>
-                            <a href="#">
-                                <div>
-                                    <i class="fa fa-comment fa-fw"></i> New Comment
-                                    <span class="pull-right text-muted small">4 minutes ago</span>
-                                </div>
-                            </a>
-                        </li>
-                        <li class="divider"></li>
-                        <li>
-                            <a href="#">
-                                <div>
-                                    <i class="fa fa-twitter fa-fw"></i> 3 New Followers
-                                    <span class="pull-right text-muted small">12 minutes ago</span>
-                                </div>
-                            </a>
-                        </li>
-                        <li class="divider"></li>
-                        <li>
-                            <a href="#">
-                                <div>
-                                    <i class="fa fa-envelope fa-fw"></i> Message Sent
-                                    <span class="pull-right text-muted small">4 minutes ago</span>
-                                </div>
-                            </a>
-                        </li>
-                        <li class="divider"></li>
-                        <li>
-                            <a href="#">
-                                <div>
-                                    <i class="fa fa-tasks fa-fw"></i> New Task
-                                    <span class="pull-right text-muted small">4 minutes ago</span>
-                                </div>
-                            </a>
-                        </li>
-                        <li class="divider"></li>
-                        <li>
-                            <a href="#">
-                                <div>
-                                    <i class="fa fa-upload fa-fw"></i> Server Rebooted
-                                    <span class="pull-right text-muted small">4 minutes ago</span>
-                                </div>
-                            </a>
-                        </li>
-                        <li class="divider"></li>
-                        <li>
-                            <a class="text-center" href="#">
-                                <strong>See All Alerts</strong>
-                                <i class="fa fa-angle-right"></i>
-                            </a>
-                        </li>
-                    </ul>
-                    <!-- /.dropdown-alerts -->
-                </li>
-                <!-- /.dropdown -->
-                <li class="dropdown">
-                    <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-                        <i class="fa fa-user fa-fw"></i>  <i class="fa fa-caret-down"></i>
-                    </a>
-                    <ul class="dropdown-menu dropdown-user">
-                        <li><a href="#"><i class="fa fa-user fa-fw"></i> User Profile</a>
-                        </li>
-                        <li><a href="#"><i class="fa fa-gear fa-fw"></i> Settings</a>
-                        </li>
-                        <li class="divider"></li>
-                        <li><a href="login.html"><i class="fa fa-sign-out fa-fw"></i> Logout</a>
-                        </li>
-                    </ul>
-                    <!-- /.dropdown-user -->
-                </li>
-                <!-- /.dropdown -->
             </ul>
-            <!-- /.navbar-top-links -->
+            <!-- /.dropdown-user -->
+        </li>
+        <li class="dropdown">
+            <a class="dropdown-toggle" href="watch/{{book.id}}">
+                <i class="fa fa-arrows-alt fa-fw"></i>
+            </a>
 
-        </nav>
-        <!-- /.navbar-static-top -->
+            <!-- /.dropdown-user -->
+        </li>
+        <!-- /.dropdown -->
+        <li class="dropdown">
+            <a class="btn-warning dropdown-toggle" data-toggle="dropdown" href="#">
+                <i class="fa fa-user fa-fw"></i>  <i class="fa fa-caret-down"></i>
+            </a>
+            <ul class="dropdown-menu dropdown-user">
+                <li><a href="#"><i class="fa fa-user fa-fw"></i> User Profile</a>
+                </li>
+                <li><a href="#"><i class="fa fa-gear fa-fw"></i> Settings</a>
+                </li>
+                <li class="divider"></li>
+                <li><a href="login.html"><i class="fa fa-sign-out fa-fw"></i> Logout</a>
+                </li>
+            </ul>
+            <!-- /.dropdown-user -->
+        </li>
+        <!-- /.dropdown -->
+    </ul>
+    <!-- /.navbar-top-links -->
 
-        <nav id="formula" class="navbar-default navbar-static-side" role="navigation">
-            <div class="sidebar-collapse">
-                <ul class="nav" id="side-menu">
-                    <li class="sidebar-search">
-                        <div class="input-group custom-search-form">
-                            <input type="text" class="form-control" placeholder="Search...">
-                            <span class="input-group-btn">
-                                <button class="btn btn-default" type="button">
-                                    <i class="fa fa-search"></i>
-                                </button>
-                            </span>
+</nav>
+{% verbatim %}
+<nav id="formula" class="navbar-default navbar-static-side" role="navigation">
+    <div class="sidebar-collapse">
+        <ul class="nav" id="side-menu" ng-controller="FunctionGenerator">
+            <li class="sidebar-search">
+                <div class="input-group custom-search-form">
+                    <input type="text" class="form-control" placeholder="Search">
+                    <span class="input-group-btn">
+                        <button class="btn btn-default btn-disable" type="button">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </span>
+                </div>
+                <!-- /input-group -->
+            </li>
+
+            <li ng-hide="hide" id="generate-menu" class="sidebar-search">
+                <div>
+                    <form name="form" novalidate class="css-form">
+                        <div class="form-group">
+                            <span>{{fnSelected.title}}</span>
+                            <ng-form class="input-group">
+                                <span class="input-group-addon">Name</span>
+                                <input class="form-control" ng-model="fnSelected.variable_name" name="input" type="text"/>
+                            </ng-form>
                         </div>
-                        <!-- /input-group -->
-                    </li>
+                        <div ng-repeat="input in inputs" class="form-group">
+                            <ng-form name="innerForm" class="input-group">
 
-                    <li id="generate-menu" class="sidebar-search">
-                        <form id="generator">                   
-                           <label class="control-label">Create Table</label>
-                           <div class="control-group">
-                            <div class="controls">
-                              <div class="input-group input-group-sm">
-                                  <span class="input-group-addon">Name</span>
-                                  <input name="table-name" type="text" class="form-control" placeholder="Table name">
-                              </div>
-                              <p class="help-block"></p>
-                          </div>
-                      </div>
-
-
-                  <div class="control-group">
-                    <div class="controls">
-                      <div class="input-group input-group-sm">
-                          <span class="input-group-addon"># Col</span>
-                          <input name="nb-col" type="number" class="form-control" placeholder="Number of Columns">
-                      </div>
-                      <p class="help-block"></p>
-                  </div>
-              </div>
-              <button id="create-generator" type="button" class="btn btn-primary">Create</button>
-              <button id="hide-generator" type="button" class="btn btn-primary">Hide</button>
-          </form>
+                                <span ng-class="((input.type==null) ? 'input-group-addon' : '')">{{input.title}}</span>
+                                <input ng-change="change('asdf')" data-placement="bottomLeft" ng-click="selectedInput(input)" ng-class="[(input.type==null) ? 'form-control' : '', input.param.style,
+                                    ((isSelectedInput (input)) ? 'input-selected': '')]" ng-model="input.value" name="input" type="{{input.type}}" smart-float=input.validation smart ng-required="input.type==null" />
+                            </ng-form>
+                            <span class="nod_msg" ng-show="innerForm.input.$error.valid">
+                                {{input.validation.msg}}</span>
+                        </div>
 
 
 
-          <!-- /input-group -->
-      </li>
+                        <button ng-click="update(inputs)" ng-disabled="form.$invalid" id="create-generator" type="button" class="btn btn-large btn-warning generator-button"><i class="fa fa-plus-circle  fa-fw"></i>
+                        </button>
+                        <button id="hide-generator" ng-click="cancel()" type="button" class="btn btn-warning generator-button pull-right"><i class="fa fa-times-circle fa-fw"></i>
+                        </button>
 
-      <li>
-        <a href="index.html"><i class="fa fa-dashboard fa-fw"></i> Dashboard</a>
-    </li>
-    <li>
-        <a href="#"><i class="fa fa-bar-chart-o fa-fw"></i> Charts<span class="fa arrow"></span></a>
-        <ul class="nav nav-second-level collapse">
-            <li>
-                <a title="chart.line(['list'])">Line</a>
+                    </form>
+
+                </div>
+
+                <!-- /input-group -->
             </li>
-            <li>
-                <a >Area</a>
-            </li>
-            <li>
-                <a >Bar</a>
-            </li>
-            <li>
-                <a >Donut</a>
-            </li>
-        </ul>
-        <!-- /.nav-second-level -->
-    </li>
-    <li>
-        <a id="generate_table"><i class="fa fa-table fa-fw"></i> Tables</a>
-    </li>
-    <li>
-        <a href="forms.html"><i class="fa fa-edit fa-fw"></i> Forms</a>
-    </li>
-    <li>
-        <a href="#"><i class="fa fa-wrench fa-fw"></i> UI Elements<span class="fa arrow"></span></a>
-        <ul class="nav nav-second-level collapse">
-            <li>
-                <a href="panels-wells.html">Panels and Wells</a>
-            </li>
-            <li>
-                <a href="buttons.html">Buttons</a>
-            </li>
-            <li>
-                <a href="notifications.html">Notifications</a>
-            </li>
-            <li>
-                <a href="typography.html">Typography</a>
-            </li>
-            <li>
-                <a href="grid.html">Grid</a>
-            </li>
-        </ul>
-        <!-- /.nav-second-level -->
-    </li>
-    <li>
-        <a href="#"><i class="fa fa-sitemap fa-fw"></i> Math<span class="fa arrow"></span></a>
-        <ul class="nav nav-second-level collapse">
-            <li>
-                <a href="#">Base</a>
-            </li>
-            <li>
-                <a href="#">Geometric</a>
-            </li>
-            <li>
-                <a href="#">Finance</a>
-            </li>
-            <li>
-                <a href="#">Stats <span class="fa arrow"></span></a>
-                <ul class="nav nav-third-level collapse">
-                    <li>
-                        <a href="#" title="mean('[Num]')">Mean</a>
-                    </li>
-                    <li>
-                        <a href="#">Square Root</a>
-                    </li>
-                    <li>
-                        <a href="#">Correlation</a>
+
+
+            <li ng-repeat="fn in fnDict">
+                <a ng-click="changeSelectedFn(fn)" href="#"><i class="fa fa-fw {{fn.icon}}"></i> {{fn.title}}<span ng-if="fn.fns" class="fa arrow"></span></a>
+                <ul ng-if="fn.fns" class="nav nav-second-level collapse">
+                    <li ng-repeat="childfn in fn.fns">
+                        <a ng-click="changeSelectedFn(childfn)" href="#"><i class="fa fa-fw {{childfn.icon}}"> </i> {{childfn.title}}<span ng-if="childfn.fns" class="fa arrow"></span></a>
+                        <ul ng-if="childfn.fns" class="nav nav-third-level collapse">
+                            <li ng-repeat="subchildfn in childfn.fns">
+                                <a ng-click="changeSelectedFn(subchildfn)" href="#"><i class="fa fa-fw {{subchildfn.icon}}"> </i> {{subchildfn.title}}<span ng-if="subchildfn.fns" class="fa arrow"></span></a>
+                            </li>
+                        </ul>
                     </li>
                 </ul>
-                <!-- /.nav-third-level -->
             </li>
+
         </ul>
-        <!-- /.nav-second-level -->
-    </li>
-    <li class="">
-        <a href="#"><i class="fa fa-files-o fa-fw"></i> Sample Pages<span class="fa arrow"></span></a>
-        <ul class="nav nav-second-level collapse" style="height: 0px;">
-            <li>
-                <a href="blank.html">Blank Page</a>
-            </li>
-            <li>
-                <a href="login.html">Login Page</a>
-            </li>
-        </ul>
-        <!-- /.nav-second-level -->
-    </li>
-</ul>
-<!-- /#side-menu -->
-</div>
-<!-- /.sidebar-collapse -->
+        <!-- /#side-menu -->
+    </div>
+    <!-- /.sidebar-collapse -->
 </nav>
-<!-- /.navbar-static-side -->
+{% endverbatim %}
