@@ -30,9 +30,10 @@ def require_mtl(fn):
 # Url Function
 
 
-@require_mtl
+
 def home(request):
     error = False
+    return render(request, 'home/coming.html', locals())    
     if request.user.is_authenticated():
         return redirect('/profil/')
     if request.method == "POST":
@@ -54,7 +55,7 @@ def home(request):
             return render(request, 'home/login.html', locals())
     else:
         form = ConnexionForm()
-    return render(request, 'home/coming.html', locals())    
+    return render(request, 'home/home.html', locals())    
     #return render(request, 'home/home.html', locals())
 
 
