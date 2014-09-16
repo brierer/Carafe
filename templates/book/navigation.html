@@ -1,83 +1,81 @@
-<nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
-    <div class="navbar-header">
-        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".sidebar-collapse">
-            <spanx class="sr-only">Toggle navigation
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </spanx>
-        </button>
-        <a id="formulaToggle" class="navbar-brand navbar-static-side"> <i class="fa fa-bars fa-fw"></i>{{ book }} {% if read_only %} | Read Only {% endif %}
-        </a>
-    </div>
+ <nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0" ng-cloak>
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".sidebar-collapse">
+                <spanx class="sr-only">Toggle navigation
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </spanx>
+            </button>
+            <a id="formulaToggle" class="navbar-brand navbar-static-side"> <i class="fa fa-bars fa-fw"></i> Error Excel  {% if read_only %} | Read Only {% endif %} </a>
+        </div>
+        <!-- /.navbar-header -->
 
-    <!-- /.navbar-header -->
+        <ul class="nav navbar-top-links navbar-right">
+            <li class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                    <i class="fa fa-eye fa-fw"></i>  <i class="fa fa-caret-down"></i>
+                </a>
+                <ul class="dropdown-menu dropdown-user">
+                    <li><a id="equationToggle"><i class="fa fa-list-ul fa-fw"></i>Equations</a>
+                    </li>
+                    <li><a id="dashBoardToggle"><i class="fa fa-dashboard fa-fw"></i>Dashboard</a>
+                    </li>
+                </ul>
+                <!-- /.dropdown-user -->
+            </li>
+            <li class="dropdown">
+                <a class="dropdown-toggle" href="watch/{{book.id}}">
+                    <i class="fa fa-arrows-alt fa-fw"></i>
+                </a>
 
-    <ul class="nav navbar-top-links navbar-right">
-        <li class="dropdown">
-            <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-                <i class="fa fa-eye fa-fw"></i>  <i class="fa fa-caret-down"></i>
-            </a>
-            <ul class="dropdown-menu dropdown-user">
-                <li><a id="equationToggle"><i class="fa fa-list-ul fa-fw"></i>Equations</a>
-                </li>
-                <li><a id="dashBoardToggle"><i class="fa fa-dashboard fa-fw"></i>Dashboard</a>
-                </li>
-            </ul>
-            <!-- /.dropdown-user -->
-        </li>
-        <li class="dropdown">
-            <a class="dropdown-toggle" href="watch/{{book.id}}">
-                <i class="fa fa-arrows-alt fa-fw"></i>
-            </a>
+                <!-- /.dropdown-user -->
+            </li>
+            <!-- /.dropdown -->
+            <li class="dropdown">
+                <a class="btn-warning dropdown-toggle" data-toggle="dropdown" href="#">
+                    <i class="fa fa-user fa-fw"></i>  <i class="fa fa-caret-down"></i>
+                </a>
+                <ul class="dropdown-menu dropdown-user">
+                    <li><a href="#"><i class="fa fa-user fa-fw"></i> User Profile</a>
+                    </li>
+                    <li><a href="#"><i class="fa fa-gear fa-fw"></i> Settings</a>
+                    </li>
+                    <li class="divider"></li>
+                    <li><a href="login.html"><i class="fa fa-sign-out fa-fw"></i> Logout</a>
+                    </li>
+                </ul>
+                <!-- /.dropdown-user -->
+            </li>
+            <!-- /.dropdown -->
+        </ul>
+        <!-- /.navbar-top-links -->
 
-            <!-- /.dropdown-user -->
-        </li>
-        <!-- /.dropdown -->
-        <li class="dropdown">
-            <a class="btn-warning dropdown-toggle" data-toggle="dropdown" href="#">
-                <i class="fa fa-user fa-fw"></i>  <i class="fa fa-caret-down"></i>
-            </a>
-            <ul class="dropdown-menu dropdown-user">
-                <li><a href="#"><i class="fa fa-user fa-fw"></i> User Profile</a>
-                </li>
-                <li><a href="#"><i class="fa fa-gear fa-fw"></i> Settings</a>
-                </li>
-                <li class="divider"></li>
-                <li><a href="login.html"><i class="fa fa-sign-out fa-fw"></i> Logout</a>
-                </li>
-            </ul>
-            <!-- /.dropdown-user -->
-        </li>
-        <!-- /.dropdown -->
-    </ul>
-    <!-- /.navbar-top-links -->
-
-</nav>
+    </nav>
 {% verbatim %}
-<nav id="formula" class="navbar-default navbar-static-side" role="navigation">
+<nav id="formula" class="navbar-default navbar-static-side" role="navigation" ng-cloak>
     <div class="sidebar-collapse">
-        <ul class="nav" id="side-menu" ng-controller="FunctionGenerator">
+        <ul class="nav" id="side-menu" ng-controller="WizardController">
             <li class="sidebar-search">
                 <div class="input-group custom-search-form">
-                    <input type="text" class="form-control" placeholder="Search">
+                    <input type="text" class="form-control" placeholder="Search (Disable)">
                     <span class="input-group-btn">
                         <button class="btn btn-default btn-disable" type="button">
                             <i class="fa fa-search"></i>
                         </button>
                     </span>
                 </div>
-                <!-- /input-group -->
+
             </li>
 
             <li ng-hide="hide" id="generate-menu" class="sidebar-search">
                 <div>
                     <form name="form" novalidate class="css-form">
                         <div class="form-group">
-                            <span>{{fnSelected.title}}</span>
+                            <label>{{fnSelected.title}}</label>
                             <ng-form class="input-group">
                                 <span class="input-group-addon">Name</span>
-                                <input class="form-control" ng-model="fnSelected.variable_name" name="input" type="text"/>
+                                <input class="form-control" ng-model="fnSelected.variable_name" name="input" type="text" required />
                             </ng-form>
                         </div>
                         <div ng-repeat="input in inputs" class="form-group">
@@ -92,7 +90,6 @@
                         </div>
 
 
-
                         <button ng-click="update(inputs)" ng-disabled="form.$invalid" id="create-generator" type="button" class="btn btn-large btn-warning generator-button"><i class="fa fa-plus-circle  fa-fw"></i>
                         </button>
                         <button id="hide-generator" ng-click="cancel()" type="button" class="btn btn-warning generator-button pull-right"><i class="fa fa-times-circle fa-fw"></i>
@@ -102,7 +99,7 @@
 
                 </div>
 
-                <!-- /input-group -->
+
             </li>
 
 
@@ -121,8 +118,8 @@
             </li>
 
         </ul>
-        <!-- /#side-menu -->
+
     </div>
-    <!-- /.sidebar-collapse -->
+
 </nav>
 {% endverbatim %}

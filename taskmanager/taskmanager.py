@@ -137,25 +137,31 @@ class Sender:
 
 class SendCalc:
 
-    def __init__(self, key, formulas):
+    def __init__(self, key, formulas, event):
         self.key = key
         self.formulas = formulas
+        self.event = event
 
     def send(self):
         if self.key is None:
             return ErrMessage("invalidKey").to_json()
         if self.formulas is None:
             return ErrMessage("invalidFormulas").to_json()
+        if (self.event is None) or ( self.event == "" ):
+            self.event = []
         Receiver().clear(self.key)
-        sender = Sender().sendMessage(self.key + ";" + self.formulas)
+        sender = Sender().sendMessage(json.dumps({
+            '_key': self.key,
+            '_eq': self.formulas,
+            '_event': self.event}))
         return sender
 
 
 class InitCalc(SendCalc):
 
-    def __init__(self, seed, formulas):
+    def __init__(self, seed, formulas, event):
         self.key = generate_task_key(seed)
-        SendCalc.__init__(self, self.key, formulas)
+        SendCalc.__init__(self, self.key, formulas, event)
 
 
 def get_result(key):

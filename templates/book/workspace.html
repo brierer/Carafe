@@ -30,14 +30,12 @@
 
 <body>
     {% include "book/navigation.html" %}
-    <div id="page-wrapper" ng-controller="WidgetController">
+    <div id="page-wrapper" ng-controller="WidgetController" ng-clock>
         <br/>{% include "book/form.html" %} {% verbatim %} {% endverbatim %} {% include "book/dashboard.html" %}
     </div>
 
     <!-- JavaScript -->
     <script src="{{ STATIC_URL }}js/app-min.js"></script>
-
-
 
 </body>
 

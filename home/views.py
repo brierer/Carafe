@@ -32,8 +32,6 @@ def require_mtl(fn):
 
 
 def home(request):
-    error = False
-    return render(request, 'home/coming.html', locals())    
     if request.user.is_authenticated():
         return redirect('/profil/')
     if request.method == "POST":

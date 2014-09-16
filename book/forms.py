@@ -44,17 +44,17 @@ class EquationsForm(forms.Form):
         else:
             return None
 
-    def send_task(self):
+    def send_task(self, event):
         equations = self.cleaned_data['equations']
         equations = filter(lambda a: ord(a) != 13, equations)
         form_id = self.cleaned_data['form_id']
-        return SendCalc(form_id, equations).send()
+        return SendCalc(form_id, equations, event).send()
 
-    def update_equations(self, user):
+    def update_equations(self, user, event):
         book = self.get_book(user)
         if book is not None:
             self.save(user)
-            res = self.send_task()
+            res = self.send_task(event)
             return {'result': 'ok', 'message': res}
         else:
             return {'result': 'error', 'message': 'Invalid Form'}

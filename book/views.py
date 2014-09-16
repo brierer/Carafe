@@ -84,10 +84,16 @@ class UpdateBook(UpdateView):
 
 # AJAX
 def post_calc(request):
-    print "salut"
     if request.method == 'POST':
-        form = EquationsForm(request.POST)
-        res = form.update_equations(request.user)
+        b = json.loads(request.body)
+        param = {
+            'equations': b['_eq'],
+            'read_only': b['read_only'],
+            'book_id': b['book_id'],
+            'form_id': b['form_id'],
+            'event': str(json.dumps(b['_event']))}
+        form = EquationsForm(param)
+        res = form.update_equations(request.user, b['_event'])
     else:
         res = {u'result': u'error', u'message': u'Invalid Request'}
     return HttpResponse(json.dumps(res), content_type="application/json")
@@ -106,7 +112,7 @@ def get_calc(request):
 
 def get_book(request, book_id, read):
     book = get_book_or_404(request.user, book_id)
-    calc = InitCalc(get_client_ip(request), book.equations)
+    calc = InitCalc(get_client_ip(request), book.equations, json.loads(book.event))
     calc.send()
     read_only = book.is_book_readable(request.user, read)
     form = EquationsForm({'equations': book.equations,

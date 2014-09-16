@@ -20,6 +20,7 @@ class BookManager(models.Manager):
 
 class Book(models.Model):
     title = models.CharField(max_length=100)
+    event = models.TextField(default="[]")
     equations = models.TextField(null=True)
     created_date = models.DateTimeField(default=timezone.now())
     user = models.ForeignKey(User)

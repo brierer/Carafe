@@ -1,6 +1,5 @@
-
-<form id="editor" method=post action="/book/3">
-     {% csrf_token %}
+<form id="editor" method=post action="/book/3" ng-controller="EditorController">
+    {% csrf_token %}
     <div class="panel panel-default">
         {% verbatim %}
         <div class="panel-heading">
@@ -9,10 +8,8 @@
                 <a id="btn_eval" ng-click="update()" class="btn_eval btn btn-warning btn-xs">GO!</a>
             </div>
         </div>
-        {% endverbatim %} {{ form.form_id }} {{ form.book_id }} {{ form.read_only }}
-        <textarea id="id_equations" name="equations" class="form-control">{{ form.equations.value }}
-
+   {% endverbatim %} {{ form.form_id }} {{ form.book_id }} {{ form.read_only }}
+        <textarea id="id_equations" name="equations" class="form-control" codeeditor data="onChange" es="es">
         </textarea>
-       
     </div>
 </form>
