@@ -29,8 +29,8 @@
 
 #containment-wrapper {
 
-    list-style-type: none
-
+    list-style-type: none;
+    margin:0px 0px 10px 0px;
 }
 
 #invisible-wrapper {
@@ -39,7 +39,7 @@
 
     top: 40px;
 
-    width: 100%;
+    width: 100%;er
 
     background-color: rgba(256, 256, 256, 0.4);
 

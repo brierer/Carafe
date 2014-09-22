@@ -17940,7 +17940,7 @@ define('workspace/widget/service',[],
         rickshaw_fabric,
         handsontable_fabric) {
         var app = angular.module('myApp.widget', ["myApp.carafe", 'myApp.editor'])
-        app.factory("WidgetsService", function($http, $q, $timeout, TableService, PlotService, EditorService) {
+        app.factory("WidgetsService", function($http, $q, $timeout, TableService, PlotService, WidgetService, EditorService) {
             var b
             return ({
                 getWidgets: getWidgets,
@@ -18005,7 +18005,7 @@ define('workspace/widget/service',[],
             }
 
             function handleSuccess(response) {
-                if (response.data == "" || response.data == null || response.data == "null" ) {
+                if (response.data == "" || response.data == null || response.data == "null") {
                     console.log("next try")
                     return getWidgets()
                 } else {
@@ -18023,15 +18023,18 @@ define('workspace/widget/service',[],
                     }
                     return {
                         res: widgets,
-                        eq: data.eq,
+                        eq: (data.eq.contents),
                         msg: null,
                     }
                 } else {
                     return {
-                        eq: data.eq,
+                        eq: (data.eq.contents),
                         msg: JSON.stringify(data.err) //createMessage(data.err)
                     }
                 }
+
+
+
             }
 
             function createMessage(err) {
@@ -18051,8 +18054,23 @@ define('workspace/widget/service',[],
                 if (data.tag == "PlotO") {
                     widget = new PlotService.Plot(id, data)
                 }
+                if (data.tag == "WidgetO") {
+                    widget = new WidgetService.Widget(id, data)
+                }
                 return widget
             }
+        })
+        app.factory("WidgetService", function() {
+            return {
+                Widget: Widget
+            }
+
+            function Widget(id, data) {
+                console.log(JSON.stringify(data._Param))
+                this.text = convertAtomicData(data._Param.text)
+                this.line = convertAtomicData(data._Param.line)
+            }
+
         })
         app.factory("PlotService", function() {
             return {
@@ -18070,16 +18088,18 @@ define('workspace/widget/service',[],
                 this.credits = {
                     enabled: false
                 }
-                this.title = {text:param(data._PlotParam, "title")}
-             
+                this.title = {
+                    text:convertAtomicData_(data._PlotParam["title"])
+                }
+
             }
 
             function param(data, s) {
-                var f  = data.find(function(elem) {
+                var f = data.find(function(elem) {
                     return (elem[0] == s)
                 })
                 if (f)
-                return convertAtomicData_(f[1])
+                    return convertAtomicData_(f[1])
             }
 
             function convertData_(data) {
@@ -18126,13 +18146,22 @@ define('workspace/widget/service',[],
             }
 
             function Table(id, data, param) {
+                var rows = []
+                if (param.row) {
+                    rows = convertArray(param.row)
+                    for (var i = rows.length; i < data[0].length+1; i++) {
+                        rows.push("")
+                    }
+                }
                 this.options = {
                     id: id,
                     data: convertData(data),
-                    colHeaders: convertArray(param),
-                    minSpareRows: 1,
+                    title: param.title ? convertAtomicData(param.title) : false,
+                    colHeaders: param.col ? (param.col._ArrayData.length == 0 ? false : convertArray(param.col)) : true,
+                    rowHeaders: param.row ? (param.row._ArrayData.length == 0 ? false : rows) : false,
+                    minSpareRows: param.spare ? convertAtomicData(param.spare) : 1,
                     stretchH: 'all',
-                    width: Math.min(75 * data.length, 225),
+                    width: Math.min(75 * (data.length + (param.row ? 1 : 0)), 1200),
                     colWidths: 25,
                     cells: function(row, col, prop) {
                         var cellProperties = {};
@@ -18326,9 +18355,10 @@ function convertData(data) {
 }
 
 function convertArray(data) {
+    var cells = data["_ArrayData"]
     var row = []
-    for (var cell = 0; cell < data.length; cell++) {
-        row.push(convertAtomicData(data[cell]))
+    for (var cell = 0; cell < cells.length; cell++) {
+        row.push(convertAtomicData(cells[cell]))
     }
     return row
 }
@@ -18340,6 +18370,8 @@ function convertAtomicData(value) {
             prettyValue = JSON.stringify(value._NumO)
         } else if (value.tag == "StrO") {
             prettyValue = value._StrO
+        } else if (value.tag == "BoolO") {
+            prettyValue = value._BoolO
         }
     } else {
         prettyValue = null
@@ -18365,10 +18397,13 @@ define('workspace/widget/directive',[
                 scope: {
                     data: '='
                 },
-                replace: false,
-                template: "<div></div>",
+                replace: true,
+                template: "<div><h4 style='text-align: center;''></h4><div></div></div>",
                 link: function(scope, elem, attrs) {
-                    var table = $(elem).handsontable(scope.data.options)
+                    if (scope.data.options.title)
+                        $(elem).children().first().html(scope.data.options.title)
+                    var table = $(elem).children().last().handsontable(scope.data.options)
+                    table.find(".rowHeader").first().css("width","74")
                     scope.data.render = table.render
                     scope.$watch('data', function(oldvalue, newvalue) {
                         table.handsontable('render')
@@ -18383,11 +18418,32 @@ define('workspace/widget/directive',[
                     data: '='
                 },
                 replace: false,
-                template: "<div></div>",
+                template: "<div width='200px'></div>",
                 link: function(scope, elem, attrs) {
                     console.log(JSON.stringify(scope.data))
                     var plot =  $(elem).highcharts(scope.data);
 
+                   
+                }
+            }
+        })
+        app.directive('widget', function() {
+            return {
+                restrict: 'A',
+                scope: {
+                    data: '='
+                },
+                replace: true,
+                template: "<br/>",
+                link: function(scope, elem, attrs) {
+                    var text=""
+                    if (scope.data.text != null && scope.data.text != "")
+                        text = "<h3>"+scope.data.text+"</h3>"
+                    if(scope.data.line){
+                        $(elem).parent().after(text+"<hr/>")
+                    }else{
+                        $(elem).parent().after(text+"<br/>")
+                     }
                    
                 }
             }
@@ -24865,9 +24921,9 @@ define('workspace/editor/service',[],
             }
             var setEQ = function(e) {
                 if (e!=undefined)
-                eq = e.contents
+                eq = e
                 if (e!=undefined)
-                callback(e.contents)
+                callback(e)
             }
             var getEQ = function() {
                 return eq
@@ -24906,7 +24962,7 @@ define('workspace/editor/directive',["codemirror",
                         theme: "elegant",
                     });
                     editor.on("change", function() {
-                        scope.es.setEQ({contents:editor.getValue()})
+                        scope.es.setEQ(editor.getValue())
                     });
                     editor.setValue(scope.es.getEQ())
                     scope.$watch("es.equations",function(val,old){editor.setValue(val)})

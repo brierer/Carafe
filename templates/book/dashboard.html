@@ -11,9 +11,15 @@
             {{message}}
         </div>
         <div class="table-container ui-widget-content draggable ui-draggable" style="position:relative;" ng-repeat="widget in widgets">
-            <div ng-if="widget.constructor.name == 'Table'" handsontable data="widget"></div>
+
+            <div ng-if="widget.constructor.name == 'Table'" handsontable data="widget">
+                <div></div>
+                <div></div>
+            </div>
             <div ng-if="widget.constructor.name == 'Plot'" plot data="widget"></div>
+            <div ng-if="widget.constructor.name == 'Widget'" widget data="widget"></div>
         </div>
+
         <div id="invisible-wrapper" ng-show="cs.widget.readOnly || message!=null" class="panel-body" style="height:1000px"></div>
     </div>
 
