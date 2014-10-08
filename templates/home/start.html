@@ -15,7 +15,7 @@
     <!-- Custom Google Web Font -->
     <link href="{{ STATIC_URL }}font-awesome/css/font-awesome.min.css" rel="stylesheet">
     <link href='http://fonts.googleapis.com/css?family=Lato:100,300,400,700,900,100italic,300italic,400italic,700italic,900italic' rel='stylesheet' type='text/css'>
-
+     <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/sweet-alert.css">
     <!-- Add custom CSS here -->
     <link href="{{ STATIC_URL }}css/landing-page.css" rel="stylesheet">
 
@@ -24,9 +24,9 @@
   <body>
 
      {% include "home/navigation.html" %}
-  
+    
       <div class="content-section-a">
-
+      <br/>
       <div class="container">
   
         <div class="row">
@@ -34,7 +34,7 @@
             <hr class="section-heading-spacer">
             <div class="clearfix"></div>
             <h2 class="section-heading">Become a data alchimist</h2>
-            <p class="lead">Carafe is the simplest way to decant data.<br/> Result will never have taste so good!</p>
+            <p class="lead">Carafe is the simplest way to decant data.<br/> Result has never been easier to share!</p>
           </div>
           <div class="col-lg-5 col-sm-pull-6  col-sm-6">
             <img class="img-responsive" src="{{ STATIC_URL }}img/lab.png" alt="">
@@ -53,7 +53,7 @@
           <div class="col-lg-5 col-sm-6">
             <hr class="section-heading-spacer">
             <div class="clearfix"></div>
-            <h2 class="section-heading">Bullet-Proof: </h2>
+            <h2 class="section-heading">Bullet-Proof </h2>
             <p class="lead">Easy to use, easy coworking, less operations, all-in one tools.<br>Carafe helps you to reduce analytic errors.</p>
           </div>
           <div class="col-lg-5 col-lg-offset-2 col-sm-6">
@@ -73,8 +73,8 @@
           <div class="col-lg-5 col-lg-offset-1 col-sm-push-6  col-sm-6">
             <hr class="section-heading-spacer">
             <div class="clearfix"></div>
-            <h2 class="section-heading">Over the Cloud</br>With Jet Speed</h2>
-            <p class="lead">Access to your sheets everywhere, everything you need is already there on the web. Even the calculus power: Fast like a G6. Grrrrr! </p>
+            <h2 class="section-heading">In the Cloud</h2>
+            <p class="lead">Access to your dashboard everywhere. It makes business intelligence faster and easier than ever before!</p>
           </div>
           <div class="col-lg-5 col-sm-pull-6  col-sm-6">
             <img class="img-responsive" src="{{ STATIC_URL }}img/jet.png" alt="">
@@ -139,5 +139,6 @@
     <script src="{{ STATIC_URL }}js/lib/jquery-1.10.2.js"></script>
     <script src="{{ STATIC_URL }}js/lib/bootstrap.js"></script>
     <script src="{{ STATIC_URL }}js/home.js"></script>
+     <script src="{{ STATIC_URL }}js/sweet-alert.js"></script> 
   </body>
 </html>
