@@ -21,7 +21,7 @@ django-picklefield==0.3.1
 django-social-auth==0.7.28
 django-static-compiler==0.3.3
 django-templatetag-sugar==0.1
-djangorestframework==2.3.14
+djangorestframework==3.11.2
 email-reply-parser==0.2.0
 gunicorn==0.17.4
 httpagentparser==1.2.2
